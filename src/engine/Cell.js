@@ -19,6 +19,14 @@ class Cell {
   isSolved() {
     return this.solvedValue && this.value === this.solvedValue;
   }
+
+  setCandidates(candidates) {
+    this.candidates = [...candidates];
+  }
+
+  hasCandidates(amount) {
+    return this.candidates.length === amount;
+  }
 }
 
 export default Cell;

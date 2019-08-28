@@ -1,5 +1,11 @@
 import Cell from "./Cell";
-import { randomBlock, isUnique, getRandomWithout, uniq } from "./math";
+import {
+  randomBlock,
+  isUnique,
+  getRandomWithout,
+  uniq,
+  getListWithout
+} from "./math";
 import { values } from "./utils";
 
 const sleep = timeout => {
@@ -166,9 +172,6 @@ class Board {
           partial.push(getRandomWithout(this.size)(existing.concat(partial)));
         }
         block = partial;
-        if (block.length !== this.size) {
-          throw new Error("wrong size");
-        }
       } else {
         block = randomBlock(this.size);
       }
@@ -205,6 +208,13 @@ class Board {
       this.clear();
       await sleep(5);
     }
+  }
+
+  updateCandidates() {
+    this.map((cell, x, y) => {
+      const existing = this.getIntersectValuesAt(x, y);
+      cell.setCandidates(getListWithout(this.size)(existing));
+    });
   }
 }
 

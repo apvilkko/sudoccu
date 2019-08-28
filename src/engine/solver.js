@@ -1,8 +1,7 @@
-import { values } from "./utils";
-
-const unsolved = block => block.filter(x => !x.isSolved());
-
 const NAKED_SINGLE = "nakedSingle";
+
+const filterCandidates = degree => block =>
+  block.filter(x => !x.isSolved() && x.hasCandidates(degree));
 
 const step = (type, cell) => ({
   type,
@@ -44,12 +43,14 @@ const solve = board => {
 
   // If board is already solved, no need to do anything.
   if (!board.isSolved()) {
+    board.updateCandidates();
+
     // Find naked singles
     blockCheck(board, block => {
-      const remaining = unsolved(block);
-      if (remaining.length === 1) {
-        addStep(steps, step(NAKED_SINGLE, remaining[0]));
-      }
+      const singleCandidates = filterCandidates(1)(block);
+      singleCandidates.forEach(candidate => {
+        addStep(steps, step(NAKED_SINGLE, candidate));
+      });
     });
   }
 

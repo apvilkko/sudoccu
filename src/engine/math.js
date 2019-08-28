@@ -18,18 +18,20 @@ const randomBlock = size => {
   return line;
 };
 
-const getRandomListWithout = size => omit => {
+const getListWithout = size => (omit, shouldShuffle) => {
   const choices = [];
   for (let i = 1; i < size + 1; ++i) {
     if (!omit.includes(i)) {
       choices.push(i);
     }
   }
-  shuffle(choices);
+  if (shouldShuffle) {
+    shuffle(choices);
+  }
   return choices;
 };
 
-const getRandomWithout = size => omit => getRandomListWithout(size)(omit)[0];
+const getRandomWithout = size => omit => getListWithout(size)(omit, true)[0];
 
 const uniq = arr => {
   const values = {};
@@ -47,5 +49,5 @@ export {
   randomBlock,
   isUnique,
   uniq,
-  getRandomListWithout
+  getListWithout
 };
