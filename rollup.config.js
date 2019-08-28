@@ -2,6 +2,7 @@ import svelte from "rollup-plugin-svelte";
 import resolve from "rollup-plugin-node-resolve";
 import buble from "rollup-plugin-buble";
 import livereload from "rollup-plugin-livereload";
+import commonjs from "rollup-plugin-commonjs";
 import { terser } from "rollup-plugin-terser";
 
 const production = !process.env.ROLLUP_WATCH;
@@ -25,7 +26,10 @@ export default {
       }
     }),
 
-    buble(),
+    buble({
+      objectAssign: "Object.assign",
+      transforms: { asyncAwait: false, forOf: false }
+    }),
 
     // If you have external dependencies installed from
     // npm, you'll most likely need these plugins. In
@@ -37,7 +41,7 @@ export default {
       dedupe: importee =>
         importee === "svelte" || importee.startsWith("svelte/")
     }),
-    // commonjs(),
+    commonjs(),
 
     // Watch the `public` directory and refresh the
     // browser on changes when not in production
