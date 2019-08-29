@@ -1,5 +1,19 @@
-import { INIT, CLEAR, SET_ROW } from "./actions";
-import { getSize, getBoard, at, isCellSolved, getIndex } from "./selectors";
+import {
+  INIT,
+  CLEAR,
+  SET_ROW,
+  SET_RANDOM_UNSOLVED,
+  UPDATE_CANDIDATES
+} from "./actions";
+import {
+  getSize,
+  getBoard,
+  at,
+  isCellSolved,
+  getIndex,
+  getIntersectValuesAt
+} from "./selectors";
+import { sample, getListWithout } from "../engine/math";
 
 const cell = (x, y) => {
   return { x, y };
@@ -42,11 +56,13 @@ const setCell = state => item => {
 const setRow = state => ({ y, row, setSolved }) => {
   const board = getBoard(state);
   const size = getSize(state);
-  return setBoard(state)([
+  const newBoard = [
     ...board.slice(0, y * size),
     ...row.map((value, x) => cellWithValue(at(state)(x, y))(value, setSolved)),
     ...board.slice((y + 1) * size)
-  ]);
+  ];
+  // console.log("setRow newBoard", newBoard);
+  return setBoard(state)(newBoard);
 };
 
 const setRandomCellUnsolved = state => () => {
@@ -90,6 +106,21 @@ const clear = state => () => {
   return setBoard(state)(board.map(item => clearCell(item)));
 };
 
+const updateCandidates = state => () => {
+  const size = getSize(state);
+  let newState = state;
+  for (let y = 0; y < size; ++y) {
+    for (let x = 0; x < size; ++x) {
+      const existing = getIntersectValuesAt(state)(x, y, true);
+      newState = setCell(state)({
+        ...existing,
+        candidates: getListWithout(size)(existing)
+      });
+    }
+  }
+  return newState;
+};
+
 const DEFAULT_DIM = 3;
 
 const initialState = {
@@ -101,6 +132,7 @@ const reducer = (state = initialState, action) => {
   if (!action) {
     return state;
   }
+  // console.log("reducer action:", action);
   switch (action.type) {
     case INIT:
       return init(state)(action.payload || {});
@@ -108,6 +140,10 @@ const reducer = (state = initialState, action) => {
       return clear(state)();
     case SET_ROW:
       return setRow(state)(action.payload);
+    case SET_RANDOM_UNSOLVED:
+      return setRandomCellUnsolved(state)();
+    case UPDATE_CANDIDATES:
+      return updateCandidates(state)();
     default:
       console.error("unknown action", action.type);
       return state;

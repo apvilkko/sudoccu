@@ -1,3 +1,6 @@
+import { getBoard, isValid, isSolved } from "../board/selectors";
+import { UPDATE_CANDIDATES } from "../board/actions";
+
 const NAKED_SINGLE = "nakedSingle";
 
 const filterCandidates = degree => block =>
@@ -49,17 +52,19 @@ const addStep = (steps, step) => {
   steps.push(step);
 };
 
-const solve = board => {
+const solve = store => {
   const steps = [];
+  const state = store.getState();
+  const board = getBoard(state);
 
   // Check validity first
-  if (!board.isValid()) {
+  if (!isValid(state)()) {
     throw new Error("invalid board state");
   }
 
   // If board is already solved, no need to do anything.
-  if (!board.isSolved()) {
-    board.updateCandidates();
+  if (!isSolved(state)()) {
+    store.dispatch({ type: UPDATE_CANDIDATES });
 
     // Find naked singles
     blockCheck(board, block => {

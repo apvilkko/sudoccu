@@ -2,7 +2,14 @@
   import { onMount } from "svelte";
   import Board from "./engine/Board";
   import SudokuBoard from "./SudokuBoard.svelte";
-  let board = new Board();
+  import createStore from "./board/store";
+  import { getBoard, getDim } from "./board/selectors";
+  import { INIT } from "./board/actions";
+  import { randomizePuzzle } from "./board/generate";
+
+  let store,
+    board,
+    state = {};
   let loading = false;
   let difficulty = 0;
   let desiredDifficulty = 10;
@@ -21,20 +28,24 @@
       : "";
   };
 
-  const generate = () => {
+  const generate = store => {
     loading = true;
-    board
-      .randomizePuzzle(desiredDifficulty)
-      .then(({ difficulty: puzzleDifficulty, steps: solutionSteps }) => {
+    randomizePuzzle(store, desiredDifficulty).then(
+      ({ difficulty: puzzleDifficulty, steps: solutionSteps }) => {
         board = board;
         difficulty = puzzleDifficulty;
         loading = false;
         steps = solutionSteps;
-      });
+      }
+    );
   };
 
   onMount(() => {
-    generate();
+    store = createStore();
+    store.dispatch({ type: INIT });
+    board = getBoard(store.getState());
+    console.log("mount", board, store);
+    generate(store);
   });
 </script>
 
@@ -51,7 +62,7 @@
     <p>Generating, please wait</p>
   {:else}
     <div class="board-container">
-      <SudokuBoard {board} />
+      <SudokuBoard {board} dim={getDim(state)} />
     </div>
     <p>Difficulty: {difficulty}</p>
     <pre>{formatSteps(steps)}</pre>

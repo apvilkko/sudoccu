@@ -1,4 +1,5 @@
 import { isUnique, uniq } from "../engine/math";
+import { values } from "../engine/utils";
 
 const getBoard = state => state.board;
 
@@ -7,7 +8,10 @@ const getDim = state => state.dim;
 
 const getIndex = state => (x, y) => y * getSize(state) + x;
 
-const at = state => (x, y) => getBoard(state)[getIndex(state)(x, y)];
+const at = state => (x, y) => {
+  const index = getIndex(state)(x, y);
+  return getBoard(state)[index];
+};
 
 const getRow = state => y => {
   const size = getSize(state);
@@ -40,18 +44,18 @@ const getRows = state => () =>
   Array.from({ length: getSize(state) }).map((_, i) => getRow(state)(i));
 
 const getIntersectValuesAt = state => (x, y, unsolved) => {
-  const values = [];
+  const vals = [];
   const dim = getDim(state);
   const size = getSize(state);
   const key = unsolved ? "solvedValue" : "value";
   for (let x1 = 0; x1 < size; ++x1) {
     if (x1 !== x && at(state)(x1, y)[key] !== null) {
-      values.push(at(state)(x1, y)[key]);
+      vals.push(at(state)(x1, y)[key]);
     }
   }
   for (let y1 = 0; y1 < size; ++y1) {
     if (y1 !== y && at(state)(x, y1)[key] !== null) {
-      values.push(at(state)(x, y1)[key]);
+      vals.push(at(state)(x, y1)[key]);
     }
   }
   const sx = Math.floor(x / dim) * dim;
@@ -59,11 +63,11 @@ const getIntersectValuesAt = state => (x, y, unsolved) => {
   for (let y2 = sy; y2 < sy + dim; ++y2) {
     for (let x2 = sx; x2 < sx + dim; ++x2) {
       if (y2 !== y && x2 !== x && at(state)(x2, y2)[key] !== null) {
-        values.push(at(state)(x2, y2)[key]);
+        vals.push(at(state)(x2, y2)[key]);
       }
     }
   }
-  return uniq(values).filter(x => !!x);
+  return uniq(vals).filter(x => !!x);
 };
 
 const isValid = state => () => {
@@ -72,6 +76,7 @@ const isValid = state => () => {
   // Cols
   for (let x = 0; x < size; ++x) {
     if (!isUnique(values(getCol(state)(x)))) {
+      // console.log("isValid col", x, values(getCol(state)(x)));
       return false;
     }
   }
