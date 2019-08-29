@@ -8,6 +8,22 @@ const step = (type, cell) => ({
   cell
 });
 
+// http://www.sudoku-help.com/SHD-Ratings.htm
+const getCost = step => {
+  switch (step.type) {
+    case NAKED_SINGLE:
+      return 1;
+    default:
+      return 1;
+  }
+};
+
+const getDifficulty = steps => {
+  return steps.reduce((acc, current) => {
+    return acc + getCost(current);
+  }, 0);
+};
+
 const blockCheck = (board, handler) => {
   for (let i = 0; i < board.size; ++i) {
     handler(board.row(i));
@@ -57,4 +73,4 @@ const solve = board => {
   return steps;
 };
 
-export { solve };
+export { solve, getDifficulty };

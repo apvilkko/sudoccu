@@ -2,6 +2,10 @@ class Cell {
   constructor(x, y) {
     this.x = x;
     this.y = y;
+    this.clear();
+  }
+
+  clear() {
     this.value = null;
     this.candidates = [];
     this.solvedValue = null;
@@ -18,6 +22,10 @@ class Cell {
 
   isSolved() {
     return this.solvedValue && this.value === this.solvedValue;
+  }
+
+  setSolvedValue(value) {
+    this.solvedValue = value;
   }
 
   setCandidates(candidates) {

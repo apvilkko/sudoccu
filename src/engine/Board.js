@@ -4,9 +4,11 @@ import {
   isUnique,
   getRandomWithout,
   uniq,
-  getListWithout
+  getListWithout,
+  sample
 } from "./math";
 import { values } from "./utils";
+import { solve, getDifficulty } from "./solver";
 
 const sleep = timeout => {
   const promise = new Promise(resolve => {
@@ -53,9 +55,9 @@ class Board {
     return this.cells[y * this.size + x];
   }
 
-  set(x, y, value) {
+  /* set(x, y, value) {
     this.at(x, y).value = value;
-  }
+  } */
 
   setRow(y, row, setSolved) {
     this.cells = [
@@ -107,32 +109,33 @@ class Board {
 
   clear() {
     for (let i = 0; i < this.size * this.size; ++i) {
-      this.cells[i].value = null;
+      this.cells[i].clear();
     }
   }
 
-  getIntersectValuesAt(x, y) {
+  getIntersectValuesAt(x, y, unsolved) {
     const values = [];
+    const key = unsolved ? "solvedValue" : "value";
     for (let x1 = 0; x1 < this.size; ++x1) {
-      if (x1 !== x && this.at(x1, y).value !== null) {
-        values.push(this.at(x1, y).value);
+      if (x1 !== x && this.at(x1, y)[key] !== null) {
+        values.push(this.at(x1, y)[key]);
       }
     }
     for (let y1 = 0; y1 < this.size; ++y1) {
-      if (y1 !== y && this.at(x, y1).value !== null) {
-        values.push(this.at(x, y1).value);
+      if (y1 !== y && this.at(x, y1)[key] !== null) {
+        values.push(this.at(x, y1)[key]);
       }
     }
     const sx = Math.floor(x / this.dim) * this.dim;
     const sy = Math.floor(y / this.dim) * this.dim;
     for (let y2 = sy; y2 < sy + this.dim; ++y2) {
       for (let x2 = sx; x2 < sx + this.dim; ++x2) {
-        if (y2 !== y && x2 !== x && this.at(x2, y2).value !== null) {
-          values.push(this.at(x2, y2).value);
+        if (y2 !== y && x2 !== x && this.at(x2, y2)[key] !== null) {
+          values.push(this.at(x2, y2)[key]);
         }
       }
     }
-    return uniq(values);
+    return uniq(values).filter(x => !!x);
   }
 
   isValid() {
@@ -175,7 +178,7 @@ class Board {
       } else {
         block = randomBlock(this.size);
       }
-      this.setRow(y, block);
+      this.setRow(y, block, true);
       if (this.isValid()) {
         // console.log(`${y} is ok, move on to ${y + 1}`, values(this.row(y)));
         y++;
@@ -198,6 +201,37 @@ class Board {
     return this.cells.every(x => x.solved);
   }
 
+  setRandomCellUnsolved() {
+    const available = this.cells.filter(x => x.isSolved());
+    const cell = sample(available);
+    console.log("cell", cell, available);
+    if (!cell) {
+      return false;
+    }
+    cell.setSolvedValue(null);
+    return true;
+  }
+
+  async randomizePuzzle(difficulty = 0) {
+    await this.randomize();
+    let puzzleDifficulty = 0;
+    let steps = null;
+    while (true) {
+      const ok = this.setRandomCellUnsolved();
+      if (!ok) {
+        throw new Error("could not unsolve cell");
+      }
+      steps = solve(this);
+      puzzleDifficulty = getDifficulty(steps);
+      console.log("puzzleDifficulty", puzzleDifficulty);
+      const difficultEnough = puzzleDifficulty >= difficulty;
+      if (difficultEnough) {
+        break;
+      }
+    }
+    return { difficulty: puzzleDifficulty, steps };
+  }
+
   async randomize() {
     this.clear();
     while (true) {
@@ -212,7 +246,7 @@ class Board {
 
   updateCandidates() {
     this.map((cell, x, y) => {
-      const existing = this.getIntersectValuesAt(x, y);
+      const existing = this.getIntersectValuesAt(x, y, true);
       cell.setCandidates(getListWithout(this.size)(existing));
     });
   }

@@ -1,16 +1,22 @@
 import MersenneTwister from "mersenne-twister";
 const generator = new MersenneTwister();
 
+const random = () => generator.random();
+
 function shuffle(a) {
   var j, x, i;
   for (i = a.length - 1; i > 0; i--) {
-    j = Math.floor(generator.random() * (i + 1));
+    j = Math.floor(random() * (i + 1));
     x = a[i];
     a[i] = a[j];
     a[j] = x;
   }
   return a;
 }
+
+const rand = (min, max) => min + Math.floor(random() * (max - min + 1));
+const sample = arr =>
+  arr.length > 0 ? arr[rand(0, arr.length - 1)] : undefined;
 
 const randomBlock = size => {
   const line = Array.from({ length: size }).map((_, i) => i + 1);
@@ -49,5 +55,6 @@ export {
   randomBlock,
   isUnique,
   uniq,
-  getListWithout
+  getListWithout,
+  sample
 };
