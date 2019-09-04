@@ -1,8 +1,10 @@
-import { getBoard, isValid, getSize } from "../board/selectors";
 import {
   updateCandidates,
   iterateBlocks,
-  isSolved
+  isSolved,
+  setCell,
+  atBoard,
+  isValid
 } from "../board/actions/board";
 import { isSolved as isCellSolved, hasCandidates } from "../board/actions/cell";
 
@@ -43,36 +45,74 @@ const isEqualStep = (one, other) => {
 const addStep = (steps, step) => {
   for (let i = 0; i < steps.length; ++i) {
     if (isEqualStep(step, steps[i])) {
-      return;
+      return false;
     }
   }
   steps.push(step);
+  return true;
 };
 
-const solve = state => {
-  const steps = [];
-  let board = getBoard(state);
-  const size = getSize(state);
+const applySteps = size => board => steps => {
+  let newBoard = board;
+  steps.forEach(step => {
+    const cell = atBoard(size)(board)(step.cell.x, step.cell.y);
+    // console.log("applying", cell, step.cell.x, step.cell.y, cell.candidates[0]);
+    newBoard = setCell(size)(board)({
+      ...cell,
+      solvedValue: cell.candidates[0]
+    });
+  });
+  return newBoard;
+};
+
+const solve = size => boardToSolve => {
+  let board = boardToSolve;
 
   // Check validity first
-  if (!isValid(state)()) {
+  if (!isValid(size)(board)()) {
     throw new Error("invalid board state");
   }
 
-  // If board is already solved, no need to do anything.
-  if (!isSolved(board)) {
+  let iterationInfo = [];
+  const allSteps = [];
+  let iteration = 0;
+
+  while (true) {
+    iterationInfo.push({ steps: [] });
+
+    // If board is already solved, no need to do anything.
+    if (isSolved(board)) {
+      break;
+    }
+
     board = updateCandidates(size)(board)();
 
-    // Find naked singles
     iterateBlocks(size)(board)(block => {
+      // Find naked singles
       const singleCandidates = filterCandidates(1)(block);
       singleCandidates.forEach(candidate => {
-        addStep(steps, step(NAKED_SINGLE, candidate));
+        const newStep = step(NAKED_SINGLE, candidate);
+        const added = addStep(allSteps, newStep);
+        if (added) {
+          iterationInfo[iteration].steps.push(newStep);
+        }
       });
+
+      // Find naked pairs
+      // TODO
+      const nakedPairCandidates = filterCandidates(2)(block);
     });
+
+    if (iterationInfo[iteration].steps.length === 0) {
+      console.log("bailing from solver at iteration", iteration);
+      break;
+    } else {
+      board = applySteps(size)(board)(iterationInfo[iteration].steps);
+    }
+    iteration++;
   }
 
-  return steps;
+  return allSteps;
 };
 
-export { solve, getDifficulty };
+export { solve, getDifficulty, filterCandidates };

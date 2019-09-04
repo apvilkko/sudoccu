@@ -1,8 +1,16 @@
 import { getIndexFromSize } from "../selectors";
-import { getListWithout, uniq } from "../../engine/math";
-import { isSolved as isCellSolved } from "./cell";
+import { getListWithout, uniq, isUnique, sample } from "../../engine/math";
+import {
+  isSolved as isCellSolved,
+  newCell,
+  clearCell,
+  cellWithValue
+} from "./cell";
+import { values } from "../../engine/utils";
 
+// ============================================================
 // selectors
+// ============================================================
 
 const atBoard = size => board => (x, y) => {
   const index = getIndexFromSize(size)(x, y);
@@ -69,12 +77,61 @@ const getIntersectValuesAtBoard = size => board => (x, y, unsolved) => {
 };
 
 const isSolved = board => board.every(x => isCellSolved(x));
+const isFilled = board =>
+  board ? board.every(x => typeof x.value === "number") : false;
 
+const isValid = size => board => () => {
+  // Cols
+  for (let x = 0; x < size; ++x) {
+    if (!isUnique(values(getCol(size)(board)(x)))) {
+      //console.log("isValid col", x, values(getCol(size)(board)(x)));
+      return false;
+    }
+  }
+
+  // Rows
+  for (let y = 0; y < size; ++y) {
+    if (!isUnique(values(getRow(size)(board)(y)))) {
+      console.log("isValid row", y, values(getRow(size)(board)(y)));
+      return false;
+    }
+  }
+
+  // Blocks
+  for (let i = 0; i < size; ++i) {
+    if (!isUnique(values(getBlock(size)(board)(i)))) {
+      console.log("isValid block", i, values(getBlock(size)(board)(i)));
+      return false;
+    }
+  }
+
+  return true;
+};
+
+// ============================================================
 // actions
+// ============================================================
 
 const setCell = size => board => item => {
+  if (typeof item.x === "undefined" || typeof item.y === "undefined") {
+    throw new Error("setCell assert item " + JSON.stringify(item));
+  }
   const index = getIndexFromSize(size)(item.x, item.y);
-  return [...board.slice(0, index), { ...item }, ...board.slice(index + 1)];
+  const newBoard = [
+    ...board.slice(0, index),
+    { ...item },
+    ...board.slice(index + 1)
+  ];
+  return newBoard;
+};
+
+const setRow = size => board => ({ y, row, setSolved }) => {
+  const get = atBoard(size);
+  return [
+    ...board.slice(0, y * size),
+    ...row.map((value, x) => cellWithValue(get(board)(x, y))(value, setSolved)),
+    ...board.slice((y + 1) * size)
+  ];
 };
 
 const updateCandidates = size => board => () => {
@@ -93,6 +150,48 @@ const updateCandidates = size => board => () => {
   return newBoard;
 };
 
+const clear = size => {
+  const board = [];
+  for (let i = 0; i < size * size; ++i) {
+    const x = i % size;
+    const y = Math.floor(i / size);
+    board.push(newCell(x, y));
+  }
+  return board.map(item => clearCell(item));
+};
+
+const init = size => initState => {
+  let board = clear(size);
+  if (initState) {
+    const rows = initState.split("\n");
+    rows.forEach((element, i) => {
+      board = setRow(size)(board)({
+        y: i,
+        row: element.split("").map(x => {
+          const number = Number(x);
+          return isNaN(number) ? undefined : number;
+        }),
+        setSolved: true
+      });
+    });
+  }
+  return board;
+};
+
+const setRandomCellUnsolved = size => board => {
+  const available = board.filter(x => isCellSolved(x));
+  const item = sample(available);
+  // console.log("cell", item, available);
+  if (!item) {
+    throw new Error("no item available!");
+  }
+  return setCell(size)(board)({ ...item, solvedValue: null });
+};
+
+// ============================================================
+// utils
+// ============================================================
+
 const iterateBlocks = size => board => handler => {
   for (let i = 0; i < size; ++i) {
     handler(getRow(size)(board)(i));
@@ -101,4 +200,19 @@ const iterateBlocks = size => board => handler => {
   }
 };
 
-export { updateCandidates, iterateBlocks, isSolved, getRows };
+export {
+  updateCandidates,
+  iterateBlocks,
+  isSolved,
+  getRow,
+  getRows,
+  setCell,
+  atBoard,
+  clear,
+  getIntersectValuesAtBoard,
+  setRow,
+  isValid,
+  isFilled,
+  setRandomCellUnsolved,
+  init
+};

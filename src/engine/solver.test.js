@@ -1,15 +1,39 @@
-import { solve } from "./solver";
-import Board from "./Board";
-import reducer from "../board/reducer";
-import { INIT } from "../board/actions/constants";
-import { at } from "../board/selectors";
+import { solve, filterCandidates } from "./solver";
+import { init, atBoard } from "../board/actions/board";
+import { newCell } from "../board/actions/cell";
 
-const initState = board => {
-  const state = reducer();
-  return reducer(state, { type: INIT, payload: { initState: board } });
+const size = 9;
+
+const blockOf = data => {
+  return data.split(" ").map((spec, i) => {
+    const cell = newCell(0, i);
+    let value = spec;
+    if (spec.startsWith("u")) {
+      value = Number(value.substr(1));
+      cell.solvedValue = value;
+      cell.value = value;
+    } else {
+      cell.candidates = spec.split("").map(Number);
+      if (cell.candidates.length === 1) {
+        cell.value = cell.candidates[0];
+      }
+    }
+    return cell;
+  });
 };
 
 describe("solver", () => {
+  describe("filterCandidates", () => {
+    it("finds singles", () => {
+      const block = blockOf("u4 6 1 125 12567 2567 u9 u3 u8");
+      const candidates = filterCandidates(1)(block);
+      const values = candidates.map(x => x.value);
+      expect(values.length).toEqual(2);
+      expect(values).toContain(1);
+      expect(values).toContain(6);
+    });
+  });
+
   describe("solve", () => {
     it("return 0 steps for solved puzzle", () => {
       const data = `629543817
@@ -22,9 +46,9 @@ describe("solver", () => {
 583124976
 967358142
 `;
-      const state = initState(data);
-      expect(solve(state)).toEqual([]);
-      expect(at(state)(0, 0).solvedValue !== null).toBeTruthy();
+      const board = init(size)(data);
+      expect(solve(size)(board)).toEqual([]);
+      expect(atBoard(size)(board)(0, 0).solvedValue !== null).toBeTruthy();
     });
 
     it("solves naked singles, simple case", () => {
@@ -38,8 +62,8 @@ describe("solver", () => {
 583124976
 967358142
 `;
-      const state = initState(data);
-      const steps = solve(state);
+      const board = init(size)(data);
+      const steps = solve(size)(board);
       const coords = steps.map(a => ({ x: a.cell.x, y: a.cell.y }));
       const types = steps.map(a => a.type);
       expect(types).toEqual(["nakedSingle", "nakedSingle", "nakedSingle"]);
@@ -60,8 +84,8 @@ describe("solver", () => {
 495.6.823
 .6.854179
 `;
-      const state = initState(data);
-      const steps = solve(state);
+      const board = init(size)(data);
+      const steps = solve(size)(board);
       const coords = steps.map(a => ({ x: a.cell.x, y: a.cell.y }));
       const types = steps.map(a => a.type);
       expect(types).toContain("nakedSingle");

@@ -1,14 +1,17 @@
-import { CLEAR, SET_ROW, SET_RANDOM_UNSOLVED } from "./actions/constants";
-import {
-  isFilled,
-  getSize,
-  getIntersectValuesAt,
-  isValid,
-  getRow
-} from "./selectors";
+import { SET_BOARD } from "./actions/constants";
 import { getRandomWithout, randomBlock } from "../engine/math";
-import { values } from "../engine/utils";
 import { solve, getDifficulty } from "../engine/solver";
+import { values } from "../engine/utils";
+import {
+  clear,
+  getIntersectValuesAtBoard,
+  setRow,
+  getRow,
+  isFilled,
+  isValid,
+  setRandomCellUnsolved
+} from "./actions/board";
+import { getSize } from "./selectors";
 
 const sleep = timeout => {
   const promise = new Promise(resolve => {
@@ -17,68 +20,95 @@ const sleep = timeout => {
   return promise.then(() => {});
 };
 
-const doRandomize = async store => {
+const doRandomize = size => {
+  console.log("doRandomize", size);
   let y = 0;
   let tries = 0;
-  let state = store.getState();
-  const size = getSize(state);
+  let board = clear(size);
   while (y < size) {
     let block;
     if (y > size / 2) {
       const partial = [];
       for (let x = 0; x < size; ++x) {
-        const existing = getIntersectValuesAt(state)(x, y);
+        const existing = getIntersectValuesAtBoard(size)(board)(x, y);
         partial.push(getRandomWithout(size)(existing.concat(partial)));
       }
       block = partial;
     } else {
       block = randomBlock(size);
     }
-    store.dispatch({
-      type: SET_ROW,
-      payload: { y, row: block, setSolved: true }
-    });
-    state = store.getState();
-    if (isValid(state)()) {
-      // console.log(`${y} is ok, move on to ${y + 1}`, values(getRow(state)(y)));
+    board = setRow(size)(board)({ y, row: block, setSolved: true });
+    const rowValues = values(getRow(size)(board)(y));
+    if (rowValues.length === size && isValid(size)(board)()) {
+      console.log(`${y} is ok, move on to ${y + 1}`, rowValues);
       y++;
       tries = 0;
     } else {
       tries++;
       if (tries > 5000) {
-        await sleep(5);
-        tries = 0;
+        throw new Error("bailout");
       }
     }
   }
+  return board;
 };
 
-const randomize = async store => {
-  store.dispatch({ type: CLEAR });
-  while (true) {
-    await doRandomize(store);
-    if (isFilled(store.getState())()) {
+const randomize = async size => {
+  console.log("randomize");
+  let tries = 0;
+  let board;
+  while (tries < 5000) {
+    try {
+      board = doRandomize(size);
+    } catch (err) {
+      console.log(err);
+    }
+    if (isFilled(board)) {
       break;
     }
-    store.dispatch({ type: CLEAR });
     await sleep(5);
+    tries++;
   }
+  console.log("randomize return", board);
+  return board;
 };
 
 const randomizePuzzle = async (store, difficulty = 0) => {
-  await randomize(store);
+  console.log("randomizePuzzle");
+  const size = getSize(store.getState());
+  let board = await randomize(size);
+  if (!board) {
+    throw new Error("unable to generate");
+  }
   let puzzleDifficulty = 0;
   let steps = null;
+  let tries = 0;
+  let achievedDifficulty = 0;
   while (true) {
-    store.dispatch({ type: SET_RANDOM_UNSOLVED });
-    steps = solve(store.getState());
+    console.log("set random unsolved");
+    board = setRandomCellUnsolved(size)(board);
+    console.log("solving", board);
+    steps = solve(size)(board);
     puzzleDifficulty = getDifficulty(steps);
+    if (puzzleDifficulty >= achievedDifficulty) {
+      achievedDifficulty = puzzleDifficulty;
+    }
     console.log("puzzleDifficulty", puzzleDifficulty);
     const difficultEnough = puzzleDifficulty >= difficulty;
     if (difficultEnough) {
       break;
     }
+    if (achievedDifficulty > puzzleDifficulty) {
+      throw new Error(
+        "could only generate difficulty of " + achievedDifficulty
+      );
+    }
+    tries++;
+    if (tries > 5000) {
+      throw new Error("unable to generate");
+    }
   }
+  store.dispatch({ type: SET_BOARD, payload: board });
   return { difficulty: puzzleDifficulty, steps };
 };
 

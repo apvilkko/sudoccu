@@ -10,9 +10,10 @@
   let store, board;
   let loading = false;
   let difficulty = 0;
-  let desiredDifficulty = 10;
+  let desiredDifficulty = 18;
   let steps = null;
   let generateFn;
+  let error = null;
 
   const formatSteps = steps => {
     return steps
@@ -29,14 +30,18 @@
 
   const generate = store => {
     loading = true;
-    randomizePuzzle(store, desiredDifficulty).then(
-      ({ difficulty: puzzleDifficulty, steps: solutionSteps }) => {
+    randomizePuzzle(store, desiredDifficulty)
+      .then(({ difficulty: puzzleDifficulty, steps: solutionSteps }) => {
         board = getBoard(store.getState());
         difficulty = puzzleDifficulty;
         loading = false;
         steps = solutionSteps;
-      }
-    );
+        error = null;
+      })
+      .catch(err => {
+        loading = false;
+        error = err;
+      });
   };
 
   onMount(() => {
@@ -60,6 +65,8 @@
   </div>
   {#if loading}
     <p>Generating, please wait</p>
+  {:else if error !== null}
+    <p>{error}</p>
   {:else}
     <div class="board-container">
       <SudokuBoard {board} dim={store ? getDim(store.getState()) : null} />
