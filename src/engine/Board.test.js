@@ -1,5 +1,5 @@
 import { values } from "./utils";
-import { INIT, CLEAR, SET_ROW } from "../board/actions";
+import { INIT, CLEAR, SET_ROW } from "../board/actions/constants";
 import { getRow } from "../board/selectors";
 import reducer from "../board/reducer";
 

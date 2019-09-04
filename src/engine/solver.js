@@ -1,10 +1,15 @@
-import { getBoard, isValid, isSolved } from "../board/selectors";
-import { UPDATE_CANDIDATES } from "../board/actions";
+import { getBoard, isValid, getSize } from "../board/selectors";
+import {
+  updateCandidates,
+  iterateBlocks,
+  isSolved
+} from "../board/actions/board";
+import { isSolved as isCellSolved, hasCandidates } from "../board/actions/cell";
 
 const NAKED_SINGLE = "nakedSingle";
 
 const filterCandidates = degree => block =>
-  block.filter(x => !x.isSolved() && x.hasCandidates(degree));
+  block.filter(x => !isCellSolved(x) && hasCandidates(x)(degree));
 
 const step = (type, cell) => ({
   type,
@@ -27,14 +32,6 @@ const getDifficulty = steps => {
   }, 0);
 };
 
-const blockCheck = (board, handler) => {
-  for (let i = 0; i < board.size; ++i) {
-    handler(board.row(i));
-    handler(board.col(i));
-    handler(board.block(i));
-  }
-};
-
 const isEqualStep = (one, other) => {
   return (
     one.type === other.type &&
@@ -52,10 +49,10 @@ const addStep = (steps, step) => {
   steps.push(step);
 };
 
-const solve = store => {
+const solve = state => {
   const steps = [];
-  const state = store.getState();
-  const board = getBoard(state);
+  let board = getBoard(state);
+  const size = getSize(state);
 
   // Check validity first
   if (!isValid(state)()) {
@@ -63,11 +60,11 @@ const solve = store => {
   }
 
   // If board is already solved, no need to do anything.
-  if (!isSolved(state)()) {
-    store.dispatch({ type: UPDATE_CANDIDATES });
+  if (!isSolved(board)) {
+    board = updateCandidates(size)(board)();
 
     // Find naked singles
-    blockCheck(board, block => {
+    iterateBlocks(size)(board)(block => {
       const singleCandidates = filterCandidates(1)(block);
       singleCandidates.forEach(candidate => {
         addStep(steps, step(NAKED_SINGLE, candidate));

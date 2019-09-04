@@ -1,10 +1,18 @@
 import { solve } from "./solver";
 import Board from "./Board";
+import reducer from "../board/reducer";
+import { INIT } from "../board/actions/constants";
+import { at } from "../board/selectors";
+
+const initState = board => {
+  const state = reducer();
+  return reducer(state, { type: INIT, payload: { initState: board } });
+};
 
 describe("solver", () => {
   describe("solve", () => {
     it("return 0 steps for solved puzzle", () => {
-      const state = `629543817
+      const data = `629543817
 158762493
 734891625
 876219534
@@ -14,13 +22,13 @@ describe("solver", () => {
 583124976
 967358142
 `;
-      const board = new Board(state);
-      expect(solve(board)).toEqual([]);
-      expect(board.at(0, 0).solvedValue !== null).toBeTruthy();
+      const state = initState(data);
+      expect(solve(state)).toEqual([]);
+      expect(at(state)(0, 0).solvedValue !== null).toBeTruthy();
     });
 
     it("solves naked singles, simple case", () => {
-      const state = `62.543817
+      const data = `62.543817
 158762493
 734891625
 8762195.4
@@ -30,7 +38,8 @@ describe("solver", () => {
 583124976
 967358142
 `;
-      const steps = solve(new Board(state));
+      const state = initState(data);
+      const steps = solve(state);
       const coords = steps.map(a => ({ x: a.cell.x, y: a.cell.y }));
       const types = steps.map(a => a.type);
       expect(types).toEqual(["nakedSingle", "nakedSingle", "nakedSingle"]);
@@ -41,7 +50,7 @@ describe("solver", () => {
     });
 
     it("solves naked singles, complex case", () => {
-      const state = `1.4.9..68
+      const data = `1.4.9..68
 956.18.34
 ..84.6951
 51.....86
@@ -51,13 +60,12 @@ describe("solver", () => {
 495.6.823
 .6.854179
 `;
-      const board = new Board(state);
-      const steps = solve(board);
+      const state = initState(data);
+      const steps = solve(state);
       const coords = steps.map(a => ({ x: a.cell.x, y: a.cell.y }));
       const types = steps.map(a => a.type);
       expect(types).toContain("nakedSingle");
       expect(coords).toContainEqual({ x: 2, y: 8 });
-      expect(board.at(2, 8).candidates).toEqual([3]);
     });
   });
 });

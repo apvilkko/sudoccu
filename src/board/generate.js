@@ -1,4 +1,4 @@
-import { CLEAR, SET_ROW, SET_RANDOM_UNSOLVED } from "./actions";
+import { CLEAR, SET_ROW, SET_RANDOM_UNSOLVED } from "./actions/constants";
 import {
   isFilled,
   getSize,
@@ -40,7 +40,7 @@ const doRandomize = async store => {
     });
     state = store.getState();
     if (isValid(state)()) {
-      console.log(`${y} is ok, move on to ${y + 1}`, values(getRow(state)(y)));
+      // console.log(`${y} is ok, move on to ${y + 1}`, values(getRow(state)(y)));
       y++;
       tries = 0;
     } else {
@@ -71,7 +71,7 @@ const randomizePuzzle = async (store, difficulty = 0) => {
   let steps = null;
   while (true) {
     store.dispatch({ type: SET_RANDOM_UNSOLVED });
-    steps = solve(store);
+    steps = solve(store.getState());
     puzzleDifficulty = getDifficulty(steps);
     console.log("puzzleDifficulty", puzzleDifficulty);
     const difficultEnough = puzzleDifficulty >= difficulty;

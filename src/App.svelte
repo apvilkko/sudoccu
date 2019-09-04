@@ -4,16 +4,15 @@
   import SudokuBoard from "./SudokuBoard.svelte";
   import createStore from "./board/store";
   import { getBoard, getDim } from "./board/selectors";
-  import { INIT } from "./board/actions";
+  import { INIT } from "./board/actions/constants";
   import { randomizePuzzle } from "./board/generate";
 
-  let store,
-    board,
-    state = {};
+  let store, board;
   let loading = false;
   let difficulty = 0;
   let desiredDifficulty = 10;
   let steps = null;
+  let generateFn;
 
   const formatSteps = steps => {
     return steps
@@ -32,7 +31,7 @@
     loading = true;
     randomizePuzzle(store, desiredDifficulty).then(
       ({ difficulty: puzzleDifficulty, steps: solutionSteps }) => {
-        board = board;
+        board = getBoard(store.getState());
         difficulty = puzzleDifficulty;
         loading = false;
         steps = solutionSteps;
@@ -44,7 +43,6 @@
     store = createStore();
     store.dispatch({ type: INIT });
     board = getBoard(store.getState());
-    console.log("mount", board, store);
     generate(store);
   });
 </script>
@@ -52,7 +50,9 @@
 <div class="container">
   <h1>Sudoccu</h1>
   <div>
-    <button on:click={generate} disabled={loading}>Generate</button>
+    <button on:click={() => generate(store)} disabled={loading}>
+      Generate
+    </button>
     <label>
       Difficulty:
       <input type="number" bind:value={desiredDifficulty} />
@@ -62,7 +62,7 @@
     <p>Generating, please wait</p>
   {:else}
     <div class="board-container">
-      <SudokuBoard {board} dim={getDim(state)} />
+      <SudokuBoard {board} dim={store ? getDim(store.getState()) : null} />
     </div>
     <p>Difficulty: {difficulty}</p>
     <pre>{formatSteps(steps)}</pre>

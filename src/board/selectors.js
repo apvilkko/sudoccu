@@ -6,7 +6,9 @@ const getBoard = state => state.board;
 const getSize = state => state.dim * state.dim;
 const getDim = state => state.dim;
 
-const getIndex = state => (x, y) => y * getSize(state) + x;
+const getIndexFromSize = size => (x, y) => y * size + x;
+
+const getIndex = state => (x, y) => getIndexFromSize(getSize(state))(x, y);
 
 const at = state => (x, y) => {
   const index = getIndex(state)(x, y);
@@ -101,10 +103,6 @@ const isValid = state => () => {
 const isFilled = state => () =>
   getBoard(state).every(x => typeof x.value === "number");
 
-const isCellSolved = cell =>
-  cell.solvedValue && cell.value === cell.solvedValue;
-const isSolved = state => () => getBoard(state).every(x => isCellSolved(x));
-
 export {
   at,
   getBoard,
@@ -117,7 +115,6 @@ export {
   getIntersectValuesAt,
   isValid,
   isFilled,
-  isSolved,
-  isCellSolved,
-  getIndex
+  getIndex,
+  getIndexFromSize
 };

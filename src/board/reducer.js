@@ -3,17 +3,18 @@ import {
   CLEAR,
   SET_ROW,
   SET_RANDOM_UNSOLVED,
-  UPDATE_CANDIDATES
-} from "./actions";
+  UPDATE_CANDIDATES,
+  SET_BOARD
+} from "./actions/constants";
 import {
   getSize,
   getBoard,
   at,
-  isCellSolved,
   getIndex,
   getIntersectValuesAt
 } from "./selectors";
 import { sample, getListWithout } from "../engine/math";
+import { isSolved } from "./actions/cell";
 
 const cell = (x, y) => {
   return { x, y };
@@ -66,9 +67,9 @@ const setRow = state => ({ y, row, setSolved }) => {
 };
 
 const setRandomCellUnsolved = state => () => {
-  const available = getBoard(state).filter(x => isCellSolved(x));
+  const available = getBoard(state).filter(x => isSolved(x));
   const item = sample(available);
-  console.log("cell", item, available);
+  // console.log("cell", item, available);
   if (!item) {
     console.log("no item available!");
   }
@@ -88,14 +89,14 @@ const init = state => ({ initState }) => {
   if (initState) {
     const rows = initState.split("\n");
     rows.forEach((element, i) => {
-      newState = setRow(newState)(
-        i,
-        element.split("").map(x => {
+      newState = setRow(newState)({
+        y: i,
+        row: element.split("").map(x => {
           const number = Number(x);
           return isNaN(number) ? undefined : number;
         }),
-        true
-      );
+        setSolved: true
+      });
     });
   }
   return newState;
@@ -140,6 +141,8 @@ const reducer = (state = initialState, action) => {
       return clear(state)();
     case SET_ROW:
       return setRow(state)(action.payload);
+    case SET_BOARD:
+      return setBoard(state)(action.payload);
     case SET_RANDOM_UNSOLVED:
       return setRandomCellUnsolved(state)();
     case UPDATE_CANDIDATES:
