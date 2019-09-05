@@ -6,7 +6,7 @@ import {
   clearCell,
   cellWithValue
 } from "./cell";
-import { values } from "../../engine/utils";
+import { values, sort } from "../../engine/utils";
 
 // ============================================================
 // selectors
@@ -108,6 +108,37 @@ const isValid = size => board => () => {
   return true;
 };
 
+const equals = (arr1, arr2) => {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+  for (let i = 0; i < arr1.length; ++i) {
+    if (arr1[i] !== arr2[i]) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/**
+ * Gets cells that include any of the candidates but not match fully
+ * @param {} candidates
+ * @param {*} block
+ */
+const getCellsWithCandidates = (candidates, block) => {
+  const out = [];
+  block.forEach(cell => {
+    if (!equals(sort(cell.candidates), sort(candidates))) {
+      candidates.forEach(candidate => {
+        if (cell.candidates.includes(candidate)) {
+          out.push(cell);
+        }
+      });
+    }
+  });
+  return out;
+};
+
 // ============================================================
 // actions
 // ============================================================
@@ -194,9 +225,9 @@ const setRandomCellUnsolved = size => board => {
 
 const iterateBlocks = size => board => handler => {
   for (let i = 0; i < size; ++i) {
-    handler(getRow(size)(board)(i));
-    handler(getCol(size)(board)(i));
-    handler(getBlock(size)(board)(i));
+    handler(getRow(size)(board)(i), "row");
+    handler(getCol(size)(board)(i), "col");
+    handler(getBlock(size)(board)(i), "block");
   }
 };
 
@@ -214,5 +245,6 @@ export {
   isValid,
   isFilled,
   setRandomCellUnsolved,
-  init
+  init,
+  getCellsWithCandidates
 };

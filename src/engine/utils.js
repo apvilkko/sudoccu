@@ -3,4 +3,6 @@ const values = arr =>
     .map(x => (x ? x.value : undefined))
     .filter(x => x !== null && typeof x !== "undefined");
 
-export { values };
+const sort = arr => Array.prototype.slice.call(arr).sort();
+
+export { values, sort };

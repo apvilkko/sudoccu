@@ -32,6 +32,12 @@ describe("solver", () => {
       expect(values).toContain(1);
       expect(values).toContain(6);
     });
+
+    it("finds pairs", () => {
+      const block = blockOf("u7 u6 2348 u9 u1 38 23 u5 23");
+      const candidates = filterCandidates(2)(block);
+      expect(candidates.length).toEqual(2);
+    });
   });
 
   describe("solve", () => {
@@ -90,6 +96,23 @@ describe("solver", () => {
       const types = steps.map(a => a.type);
       expect(types).toContain("nakedSingle");
       expect(coords).toContainEqual({ x: 2, y: 8 });
+    });
+
+    it("solved naked pairs", () => {
+      const data = `597.4..3.
+348....6.
+612.9..84
+75....49.
+8.9....7.
+4..6...5.
+17..2.64.
+96..83.2.
+28.....1.
+`;
+      const board = init(size)(data);
+      const steps = solve(size)(board);
+      expect(steps.length).toEqual(27);
+      expect(steps.map(a => a.type)).toContain("nakedPair");
     });
   });
 });

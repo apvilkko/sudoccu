@@ -4,14 +4,37 @@ import {
   isSolved,
   setCell,
   atBoard,
-  isValid
+  isValid,
+  getCellsWithCandidates
 } from "../board/actions/board";
 import { isSolved as isCellSolved, hasCandidates } from "../board/actions/cell";
+import { sort } from "./utils";
 
 const NAKED_SINGLE = "nakedSingle";
+const NAKED_PAIR = "nakedPair";
 
-const filterCandidates = degree => block =>
-  block.filter(x => !isCellSolved(x) && hasCandidates(x)(degree));
+const filterCandidates = degree => block => {
+  const cells = block.filter(x => !isCellSolved(x) && hasCandidates(x)(degree));
+  const seen = {};
+  cells.forEach(cell => {
+    const key = JSON.stringify(sort(cell.candidates));
+    if (!seen[key]) {
+      seen[key] = [];
+    }
+    seen[key].push(cell);
+  });
+  const reduced = Object.values(seen).reduce((acc, current) => {
+    if (current.length === degree) {
+      current.forEach(item => {
+        if (item.candidates.length === degree) {
+          acc.push(item);
+        }
+      });
+    }
+    return acc;
+  }, []);
+  return reduced;
+};
 
 const step = (type, cell) => ({
   type,
@@ -85,9 +108,10 @@ const solve = size => boardToSolve => {
       break;
     }
 
+    // TODO how to update candidates when steps remove candidates?
     board = updateCandidates(size)(board)();
 
-    iterateBlocks(size)(board)(block => {
+    iterateBlocks(size)(board)((block, blockType) => {
       // Find naked singles
       const singleCandidates = filterCandidates(1)(block);
       singleCandidates.forEach(candidate => {
@@ -99,8 +123,19 @@ const solve = size => boardToSolve => {
       });
 
       // Find naked pairs
-      // TODO
       const nakedPairCandidates = filterCandidates(2)(block);
+      nakedPairCandidates.forEach(candidate => {
+        const cells = getCellsWithCandidates(candidate.candidates, block);
+        cells.forEach(cell => {
+          // TODO how to model naked pair and apply step
+          const newStep = step(NAKED_PAIR, cell);
+          const added = addStep(allSteps, newStep);
+          if (added) {
+            iterationInfo[iteration].steps.push(newStep);
+            //console.log("add", newStep);
+          }
+        });
+      });
     });
 
     if (iterationInfo[iteration].steps.length === 0) {
