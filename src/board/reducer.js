@@ -1,11 +1,22 @@
-import { INIT, SET_BOARD } from "./actions/constants";
-import { init as initBoard } from "./actions/board";
-import { getSize } from "./selectors";
+import {
+  INIT,
+  SET_BOARD,
+  UPDATE_CANDIDATES,
+  APPLY_STEPS
+} from "./actions/constants";
+import { init as initBoard, updateCandidates } from "./actions/board";
+import { getSize, getBoard } from "./selectors";
+import { applySteps } from "../engine/solver";
 
-const setBoard = state => board => ({
-  ...state,
-  board
-});
+const setBoard = state => board => {
+  if (!Array.isArray(board)) {
+    throw new Error("setBoard not valid board" + typeof board);
+  }
+  return {
+    ...state,
+    board
+  };
+};
 
 const init = state => ({ initState }) => {
   const board = initBoard(getSize(state))(initState);
@@ -31,12 +42,21 @@ const reducer = (state = initialState, action) => {
       return clear(state)(); */
     /*case SET_ROW:
       return setRow(state)(action.payload);*/
-    case SET_BOARD:
+    case SET_BOARD: {
+      console.log("SET_BOARD", action.payload);
       return setBoard(state)(action.payload);
+    }
     /* case SET_RANDOM_UNSOLVED:
       return setRandomCellUnsolved(state)(); */
-    /* case UPDATE_CANDIDATES:
-      return updateCandidates(state)(); */
+    case APPLY_STEPS: {
+      const size = getSize(state);
+      const board = getBoard(state);
+      return setBoard(state)(applySteps(size)(board)(action.payload));
+    }
+    case UPDATE_CANDIDATES: {
+      const board = getBoard(state);
+      return setBoard(state)(updateCandidates(getSize(state))(board)());
+    }
     default:
       console.error("unknown action", action.type);
       return state;

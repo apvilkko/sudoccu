@@ -4,7 +4,10 @@
 
 const isSolved = cell => cell.solvedValue && cell.value === cell.solvedValue;
 
-const hasCandidates = cell => amount => cell.candidates.length === amount;
+const getCandidates = cell => cell.candidates;
+const getSolvedCandidates = cell => cell.solvedCandidates;
+
+const hasCandidates = cell => amount => getCandidates(cell).length === amount;
 
 // ============================================================
 // actions
@@ -14,7 +17,8 @@ const clearCell = item => ({
   ...item,
   value: null,
   candidates: [],
-  solvedValue: null
+  solvedValue: null,
+  solvedCandidates: []
 });
 
 const cellWithValue = oldCell => (value, setSolved) => {
@@ -26,7 +30,7 @@ const cellWithValue = oldCell => (value, setSolved) => {
   if (setSolved) {
     cell.solvedValue = value;
   }
-  return cell;
+  return { ...oldCell, ...cell };
 };
 
 // ============================================================
@@ -37,4 +41,12 @@ const newCell = (x, y) => {
   return { x, y };
 };
 
-export { isSolved, hasCandidates, newCell, clearCell, cellWithValue };
+export {
+  isSolved,
+  hasCandidates,
+  newCell,
+  clearCell,
+  cellWithValue,
+  getCandidates,
+  getSolvedCandidates
+};

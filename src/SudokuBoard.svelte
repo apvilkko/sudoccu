@@ -7,7 +7,7 @@
   export let dim;
 
   let size;
-  const DEBUG = true;
+  const DEBUG = false;
 
   onMount(() => {
     size = dim * dim;
@@ -15,7 +15,7 @@
 </script>
 
 {#if !board}
-
+  <div />
 {:else}
   <div class={`board board-${size}`}>
     {#each getRows(size)(board) as row}
@@ -26,6 +26,13 @@
           <span class="value">
             {item.solvedValue || (DEBUG ? `(${item.value})` : '')}
           </span>
+          {#if !item.solvedValue}
+            {#each item.candidates as candidate}
+              <span class={`candidate candidate-${candidate}`}>
+                {candidate}
+              </span>
+            {/each}
+          {/if}
         </div>
       {/each}
     {/each}

@@ -1,10 +1,12 @@
+import * as R from "ramda";
 import { getIndexFromSize } from "../selectors";
-import { getListWithout, uniq, isUnique, sample } from "../../engine/math";
+import { uniq, isUnique, sample } from "../../engine/math";
 import {
   isSolved as isCellSolved,
   newCell,
   clearCell,
-  cellWithValue
+  cellWithValue,
+  getCandidates
 } from "./cell";
 import { values, sort } from "../../engine/utils";
 
@@ -20,11 +22,16 @@ const atBoard = size => board => (x, y) => {
 const getDimFromSize = size => Math.round(Math.sqrt(size));
 
 const getRow = size => board => y => {
+  if (!board || !board.slice) {
+    throw new Error("getRow null board: " + size + " " + JSON.stringify(board));
+  }
   return board.slice(y * size, y * size + size);
 };
 
-const getRows = size => board =>
-  Array.from({ length: size }).map((_, i) => getRow(size)(board)(i));
+const getRows = size => board => {
+  console.log("getRows", size, board);
+  return Array.from({ length: size }).map((_, i) => getRow(size)(board)(i));
+};
 
 const getCol = size => board => x => {
   const out = [];
@@ -77,6 +84,7 @@ const getIntersectValuesAtBoard = size => board => (x, y, unsolved) => {
 };
 
 const isSolved = board => board.every(x => isCellSolved(x));
+
 const isFilled = board =>
   board ? board.every(x => typeof x.value === "number") : false;
 
@@ -84,7 +92,7 @@ const isValid = size => board => () => {
   // Cols
   for (let x = 0; x < size; ++x) {
     if (!isUnique(values(getCol(size)(board)(x)))) {
-      //console.log("isValid col", x, values(getCol(size)(board)(x)));
+      // console.log("isValid col", x);
       return false;
     }
   }
@@ -92,7 +100,7 @@ const isValid = size => board => () => {
   // Rows
   for (let y = 0; y < size; ++y) {
     if (!isUnique(values(getRow(size)(board)(y)))) {
-      console.log("isValid row", y, values(getRow(size)(board)(y)));
+      // console.log("isValid row", y);
       return false;
     }
   }
@@ -100,37 +108,25 @@ const isValid = size => board => () => {
   // Blocks
   for (let i = 0; i < size; ++i) {
     if (!isUnique(values(getBlock(size)(board)(i)))) {
-      console.log("isValid block", i, values(getBlock(size)(board)(i)));
+      // console.log("isValid block", i);
       return false;
     }
   }
 
-  return true;
-};
-
-const equals = (arr1, arr2) => {
-  if (arr1.length !== arr2.length) {
-    return false;
-  }
-  for (let i = 0; i < arr1.length; ++i) {
-    if (arr1[i] !== arr2[i]) {
-      return false;
-    }
-  }
   return true;
 };
 
 /**
- * Gets cells that include any of the candidates but not match fully
+ * Gets cells that include any of the candidates but not match fully, and are not solved
  * @param {} candidates
  * @param {*} block
  */
 const getCellsWithCandidates = (candidates, block) => {
   const out = [];
   block.forEach(cell => {
-    if (!equals(sort(cell.candidates), sort(candidates))) {
+    if (!R.equals(sort(getCandidates(cell)), sort(candidates))) {
       candidates.forEach(candidate => {
-        if (cell.candidates.includes(candidate)) {
+        if (!isCellSolved(cell) && getCandidates(cell).includes(candidate)) {
           out.push(cell);
         }
       });
@@ -165,6 +161,9 @@ const setRow = size => board => ({ y, row, setSolved }) => {
   ];
 };
 
+/**
+ * Updates candidates so that solved cells are removed from applicable blocks
+ */
 const updateCandidates = size => board => () => {
   const set = setCell(size);
   const get = atBoard(size);
@@ -172,9 +171,11 @@ const updateCandidates = size => board => () => {
   for (let y = 0; y < size; ++y) {
     for (let x = 0; x < size; ++x) {
       const existing = getIntersectValuesAtBoard(size)(board)(x, y, true);
+      const cell = get(newBoard)(x, y);
+      // console.log("update", existing, cell);
       newBoard = set(newBoard)({
-        ...get(newBoard)(x, y),
-        candidates: getListWithout(size)(existing)
+        ...cell,
+        candidates: R.without(existing)(getCandidates(cell))
       });
     }
   }
@@ -189,6 +190,20 @@ const clear = size => {
     board.push(newCell(x, y));
   }
   return board.map(item => clearCell(item));
+};
+
+const initializeCandidates = size => board => {
+  let newBoard = board;
+  const candidateArray = Array.from({ length: size }).map((_, i) => i + 1);
+  for (let i = 0; i < size * size; ++i) {
+    const cell = board[i];
+    newBoard = setCell(size)(newBoard)({
+      ...cell,
+      candidates: candidateArray,
+      solvedCandidates: candidateArray
+    });
+  }
+  return newBoard;
 };
 
 const init = size => initState => {
@@ -206,7 +221,7 @@ const init = size => initState => {
       });
     });
   }
-  return board;
+  return initializeCandidates(size)(board);
 };
 
 const setRandomCellUnsolved = size => board => {
@@ -246,5 +261,6 @@ export {
   isFilled,
   setRandomCellUnsolved,
   init,
-  getCellsWithCandidates
+  getCellsWithCandidates,
+  initializeCandidates
 };

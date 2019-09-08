@@ -3,7 +3,7 @@ import { getRandomWithout, randomBlock } from "../engine/math";
 import { solve, getDifficulty } from "../engine/solver";
 import { values } from "../engine/utils";
 import {
-  clear,
+  init,
   getIntersectValuesAtBoard,
   setRow,
   getRow,
@@ -24,7 +24,7 @@ const doRandomize = size => {
   console.log("doRandomize", size);
   let y = 0;
   let tries = 0;
-  let board = clear(size);
+  let board = init(size)();
   while (y < size) {
     let block;
     if (y > size / 2) {
@@ -108,6 +108,7 @@ const randomizePuzzle = async (store, difficulty = 0) => {
       throw new Error("unable to generate");
     }
   }
+  // initializeCandidates(size)(board);
   store.dispatch({ type: SET_BOARD, payload: board });
   return { difficulty: puzzleDifficulty, steps };
 };

@@ -34,6 +34,7 @@ button {
 }
 
 .cell {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,4 +67,33 @@ button {
 .board-container {
   display: flex;
   justify-content: center;
+}
+
+.candidate {
+  position: absolute;
+  color: #777;
+}
+
+.candidate-1,
+.candidate-2,
+.candidate-3 {
+  top: 0;
+}
+
+.candidate-1,
+.candidate-4,
+.candidate-7 {
+  left: 0;
+}
+
+.candidate-3,
+.candidate-6,
+.candidate-9 {
+  right: 0;
+}
+
+.candidate-7,
+.candidate-8,
+.candidate-9 {
+  bottom: 0;
 }

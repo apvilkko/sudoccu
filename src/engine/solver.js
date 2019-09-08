@@ -1,3 +1,4 @@
+import * as R from "ramda";
 import {
   updateCandidates,
   iterateBlocks,
@@ -7,39 +8,53 @@ import {
   isValid,
   getCellsWithCandidates
 } from "../board/actions/board";
-import { isSolved as isCellSolved, hasCandidates } from "../board/actions/cell";
+import {
+  isSolved as isCellSolved,
+  hasCandidates,
+  getCandidates
+} from "../board/actions/cell";
 import { sort } from "./utils";
 
-const NAKED_SINGLE = "nakedSingle";
-const NAKED_PAIR = "nakedPair";
+export const NAKED_SINGLE = "nakedSingle";
+export const NAKED_PAIR = "nakedPair";
 
 const filterCandidates = degree => block => {
   const cells = block.filter(x => !isCellSolved(x) && hasCandidates(x)(degree));
   const seen = {};
   cells.forEach(cell => {
-    const key = JSON.stringify(sort(cell.candidates));
+    const key = JSON.stringify(sort(getCandidates(cell)));
     if (!seen[key]) {
       seen[key] = [];
     }
     seen[key].push(cell);
   });
-  const reduced = Object.values(seen).reduce((acc, current) => {
+
+  /*const reduced = Object.values(seen).reduce((acc, current) => {
     if (current.length === degree) {
       current.forEach(item => {
-        if (item.candidates.length === degree) {
+        if (getCandidates(item).length === degree) {
           acc.push(item);
         }
       });
     }
     return acc;
-  }, []);
-  return reduced;
+  }, []); */
+  return R.filter(
+    a =>
+      a.length === degree && R.all(b => getCandidates(b).length === degree)(a)
+  )(seen);
 };
 
-const step = (type, cell) => ({
-  type,
-  cell
-});
+const step = (type, data) => {
+  const cleaned = data;
+  if (data && data.solved) {
+    cleaned.solved = R.map(R.omit(["solvedValue"]))(data.solved);
+  }
+  return {
+    type,
+    ...cleaned
+  };
+};
 
 // http://www.sudoku-help.com/SHD-Ratings.htm
 const getCost = step => {
@@ -58,11 +73,7 @@ const getDifficulty = steps => {
 };
 
 const isEqualStep = (one, other) => {
-  return (
-    one.type === other.type &&
-    one.cell.x === other.cell.x &&
-    one.cell.y === other.cell.y
-  );
+  return R.equals(one, other);
 };
 
 const addStep = (steps, step) => {
@@ -78,14 +89,37 @@ const addStep = (steps, step) => {
 const applySteps = size => board => steps => {
   let newBoard = board;
   steps.forEach(step => {
-    const cell = atBoard(size)(board)(step.cell.x, step.cell.y);
-    // console.log("applying", cell, step.cell.x, step.cell.y, cell.candidates[0]);
-    newBoard = setCell(size)(board)({
-      ...cell,
-      solvedValue: cell.candidates[0]
-    });
+    // console.log("apply step", step);
+    if (step.solved) {
+      step.solved.forEach(solvedCell => {
+        const cell = atBoard(size)(newBoard)(solvedCell.x, solvedCell.y);
+        const newValue = {
+          ...cell,
+          solvedValue: getCandidates(solvedCell)[0]
+        };
+        // console.log("newValue", JSON.stringify(newValue));
+        newBoard = setCell(size)(newBoard)(newValue);
+      });
+    }
+    if (step.eliminations) {
+      step.eliminations.forEach(spec => {
+        const cell = atBoard(size)(newBoard)(spec.x, spec.y);
+        newBoard = setCell(size)(newBoard)({
+          ...cell,
+          candidates: R.without(spec.eliminatedCandidates)(getCandidates(cell))
+        });
+      });
+    }
   });
   return newBoard;
+};
+
+const getTupleFromKey = key => {
+  const match = key.match(/\[(\d+),(\d+)\]/);
+  if (match) {
+    return match.slice(1).map(Number);
+  }
+  return [];
 };
 
 const solve = size => boardToSolve => {
@@ -108,14 +142,13 @@ const solve = size => boardToSolve => {
       break;
     }
 
-    // TODO how to update candidates when steps remove candidates?
     board = updateCandidates(size)(board)();
 
     iterateBlocks(size)(board)((block, blockType) => {
       // Find naked singles
       const singleCandidates = filterCandidates(1)(block);
-      singleCandidates.forEach(candidate => {
-        const newStep = step(NAKED_SINGLE, candidate);
+      Object.values(singleCandidates).forEach(candidate => {
+        const newStep = step(NAKED_SINGLE, { solved: candidate });
         const added = addStep(allSteps, newStep);
         if (added) {
           iterationInfo[iteration].steps.push(newStep);
@@ -124,30 +157,47 @@ const solve = size => boardToSolve => {
 
       // Find naked pairs
       const nakedPairCandidates = filterCandidates(2)(block);
-      nakedPairCandidates.forEach(candidate => {
-        const cells = getCellsWithCandidates(candidate.candidates, block);
-        cells.forEach(cell => {
-          // TODO how to model naked pair and apply step
-          const newStep = step(NAKED_PAIR, cell);
+      // console.log("nakedPairCandidates", nakedPairCandidates);
+      Object.keys(nakedPairCandidates).forEach(pair => {
+        const pairCandidate = getTupleFromKey(pair);
+        // console.log("pairCandidate", pairCandidate);
+        const cells = getCellsWithCandidates(pairCandidate, block);
+        if (!R.isEmpty(cells)) {
+          const newStep = step(NAKED_PAIR, {
+            tuple: pairCandidate,
+            cause: nakedPairCandidates[pair],
+            blockType,
+            eliminations: R.map(cell => ({
+              ...cell,
+              eliminatedCandidates: R.intersection(
+                getCandidates(cell),
+                pairCandidate
+              )
+            }))(cells)
+          });
           const added = addStep(allSteps, newStep);
           if (added) {
             iterationInfo[iteration].steps.push(newStep);
-            //console.log("add", newStep);
+            // console.log("add", JSON.stringify(newStep, null, 2));
           }
-        });
+        }
       });
     });
+
+    board = applySteps(size)(board)(iterationInfo[iteration].steps);
 
     if (iterationInfo[iteration].steps.length === 0) {
       console.log("bailing from solver at iteration", iteration);
       break;
-    } else {
-      board = applySteps(size)(board)(iterationInfo[iteration].steps);
     }
     iteration++;
+  }
+
+  if (!isSolved(board)) {
+    throw new Error("unsolvable");
   }
 
   return allSteps;
 };
 
-export { solve, getDifficulty, filterCandidates };
+export { solve, getDifficulty, filterCandidates, applySteps };
