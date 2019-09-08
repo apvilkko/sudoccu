@@ -84,21 +84,14 @@
   };
 
   const applyNextStep = () => {
-    console.log("-> applyNextStep");
-    console.log("steps HEAD is ", JSON.stringify(steps[0]));
     updateSteps();
-    console.log("steps HEAD is ", JSON.stringify(steps[0]));
     if (steps && steps.length > 0) {
-      console.log("APPLY_STEPS", steps.slice(0, 1));
       store.dispatch({ type: APPLY_STEPS, payload: steps.slice(0, 1) });
     }
-    console.log("steps HEAD is ", JSON.stringify(steps[0]));
     board = getBoard(store.getState());
-    console.log("steps HEAD is ", JSON.stringify(steps[0]));
     setTimeout(() => {
       updateSteps();
-    }, 200);
-    console.log("<- applyNextStep");
+    }, 100);
   };
 
   onMount(() => {
