@@ -34,6 +34,7 @@ button {
 }
 
 .cell {
+  cursor: pointer;
   position: relative;
   display: flex;
   align-items: center;
@@ -55,7 +56,7 @@ button {
 
 .value {
   font-size: 2rem;
-  font-weight: bold;
+  font-weight: 400;
 }
 
 .container {
@@ -96,4 +97,24 @@ button {
 .candidate-8,
 .candidate-9 {
   bottom: 0;
+}
+
+.highlight-match {
+  background: #eee;
+}
+
+.highlight-candidate {
+  font-weight: 700;
+}
+
+.highlight-match .value {
+  font-weight: 700;
+}
+
+.highlight-block {
+  box-shadow: inset 0 0 0.1rem 0.1rem rgba(0, 0, 0, 0.75);
+}
+
+.highlight {
+  background: #bbb;
 }

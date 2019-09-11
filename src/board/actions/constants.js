@@ -5,6 +5,7 @@ const SET_BOARD = "setBoard";
 const SET_RANDOM_UNSOLVED = "setRandomUnsolved";
 const UPDATE_CANDIDATES = "updateCandidates";
 const APPLY_STEPS = "applySteps";
+const HIGHLIGHT = "highlight";
 
 export {
   INIT,
@@ -13,5 +14,6 @@ export {
   SET_RANDOM_UNSOLVED,
   UPDATE_CANDIDATES,
   SET_BOARD,
-  APPLY_STEPS
+  APPLY_STEPS,
+  HIGHLIGHT
 };

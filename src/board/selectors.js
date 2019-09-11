@@ -7,4 +7,6 @@ const getIndexFromSize = size => (x, y) => y * size + x;
 
 const getIndex = state => (x, y) => getIndexFromSize(getSize(state))(x, y);
 
-export { getBoard, getSize, getDim, getIndex, getIndexFromSize };
+const getHighlight = state => state.highlight;
+
+export { getBoard, getSize, getDim, getIndex, getIndexFromSize, getHighlight };

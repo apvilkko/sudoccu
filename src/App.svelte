@@ -7,13 +7,15 @@
   import {
     INIT,
     UPDATE_CANDIDATES,
-    APPLY_STEPS
+    APPLY_STEPS,
+    HIGHLIGHT
   } from "./board/actions/constants";
   import { updateCandidates } from "./board/actions/board";
   import { randomizePuzzle } from "./board/generate";
   import { solve } from "./engine/solver";
+  import { isSolved as isCellSolved } from "./board/actions/cell";
 
-  let store, board;
+  let store, board, state;
   let loading = false;
   let difficulty = 0;
   let desiredDifficulty = 35;
@@ -63,7 +65,7 @@
     randomizePuzzle(store, desiredDifficulty)
       .then(({ difficulty: puzzleDifficulty, steps: solutionSteps }) => {
         store.dispatch({ type: UPDATE_CANDIDATES });
-        board = getBoard(store.getState());
+        state = store.getState();
         difficulty = puzzleDifficulty;
         loading = false;
         steps = solutionSteps;
@@ -86,42 +88,55 @@
   const applyNextStep = () => {
     updateSteps();
     if (steps && steps.length > 0) {
+      store.dispatch({ type: HIGHLIGHT, payload: { cell: {} } });
       store.dispatch({ type: APPLY_STEPS, payload: steps.slice(0, 1) });
+      state = store.getState();
     }
-    board = getBoard(store.getState());
     setTimeout(() => {
       updateSteps();
     }, 100);
   };
 
+  const handleCellClick = cell => {
+    if (isCellSolved(cell)) {
+      store.dispatch({ type: HIGHLIGHT, payload: { cell } });
+    } else {
+    }
+    state = store.getState();
+  };
+
   onMount(() => {
     store = createStore();
     store.dispatch({ type: INIT });
-    board = getBoard(store.getState());
+    state = store.getState();
     generate();
   });
 </script>
 
-<div class="container">
-  <h1>Sudoccu</h1>
-  <div>
-    <button on:click={generate} disabled={loading}>Generate</button>
-    <button on:click={applyNextStep} disabled={loading}>Apply next step</button>
-    <label>
-      Difficulty:
-      <input type="number" bind:value={desiredDifficulty} />
-    </label>
-  </div>
-  {#if loading}
-    <p>Generating, please wait</p>
-  {:else if error !== null}
-    <p>{error}</p>
-  {:else}
-    <div class="board-container">
-      <SudokuBoard {board} dim={store ? getDim(store.getState()) : null} />
+{#if store}
+  <div class="container">
+    <h1>Sudoccu</h1>
+    <div>
+      <button on:click={generate} disabled={loading}>Generate</button>
+      <button on:click={applyNextStep} disabled={loading}>
+        Apply next step
+      </button>
+      <label>
+        Difficulty:
+        <input type="number" bind:value={desiredDifficulty} />
+      </label>
     </div>
-    <p>Difficulty: {difficulty}</p>
-    <pre>{formatSteps(steps)}</pre>
-  {/if}
+    {#if loading}
+      <p>Generating, please wait</p>
+    {:else if error !== null}
+      <p>{error}</p>
+    {:else}
+      <div class="board-container">
+        <SudokuBoard {store} {state} {handleCellClick} />
+      </div>
+      <p>Difficulty: {difficulty}</p>
+      <pre>{formatSteps(steps)}</pre>
+    {/if}
 
-</div>
+  </div>
+{/if}

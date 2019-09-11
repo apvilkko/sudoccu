@@ -95,7 +95,8 @@ const applySteps = size => board => steps => {
         const cell = atBoard(size)(newBoard)(solvedCell.x, solvedCell.y);
         const newValue = {
           ...cell,
-          solvedValue: getCandidates(solvedCell)[0]
+          solvedValue: getCandidates(solvedCell)[0],
+          candidates: []
         };
         // console.log("newValue", JSON.stringify(newValue));
         newBoard = setCell(size)(newBoard)(newValue);

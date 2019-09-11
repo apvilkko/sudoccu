@@ -175,7 +175,9 @@ const updateCandidates = size => board => () => {
       // console.log("update", existing, cell);
       newBoard = set(newBoard)({
         ...cell,
-        candidates: R.without(existing)(getCandidates(cell))
+        candidates: cell.solvedValue
+          ? []
+          : R.without(existing)(getCandidates(cell))
       });
     }
   }

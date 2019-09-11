@@ -2,7 +2,7 @@
 // selectors
 // ============================================================
 
-const isSolved = cell => cell.solvedValue && cell.value === cell.solvedValue;
+const isSolved = cell => !!cell.solvedValue;
 
 const getCandidates = cell => cell.candidates;
 const getSolvedCandidates = cell => cell.solvedCandidates;
