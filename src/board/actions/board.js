@@ -118,21 +118,40 @@ const isValid = size => board => () => {
 
 /**
  * Gets cells that include any of the candidates but not match fully, and are not solved
- * @param {} candidates
- * @param {*} block
  */
 const getCellsWithCandidates = (candidates, block) => {
   const out = [];
   block.forEach(cell => {
+    if (isCellSolved(cell)) {
+      return;
+    }
     if (!R.equals(sort(getCandidates(cell)), sort(candidates))) {
       candidates.forEach(candidate => {
-        if (!isCellSolved(cell) && getCandidates(cell).includes(candidate)) {
+        if (getCandidates(cell).includes(candidate)) {
           out.push(cell);
         }
       });
     }
   });
   return out;
+};
+
+const getCellsInBlockByCandidateValue = (
+  value,
+  amount,
+  block,
+  amountMax = 999
+) => {
+  const out = [];
+  block.forEach(cell => {
+    if (isCellSolved(cell)) {
+      return;
+    }
+    if (getCandidates(cell).includes(value)) {
+      out.push(cell);
+    }
+  });
+  return out.length >= amount && out.length <= amountMax ? out : [];
 };
 
 // ============================================================
@@ -242,9 +261,9 @@ const setRandomCellUnsolved = size => board => {
 
 const iterateBlocks = size => board => handler => {
   for (let i = 0; i < size; ++i) {
-    handler(getRow(size)(board)(i), "row");
-    handler(getCol(size)(board)(i), "col");
-    handler(getBlock(size)(board)(i), "block");
+    handler(getRow(size)(board)(i), "row", i);
+    handler(getCol(size)(board)(i), "col", i);
+    handler(getBlock(size)(board)(i), "block", i);
   }
 };
 
@@ -253,6 +272,7 @@ export {
   iterateBlocks,
   isSolved,
   getRow,
+  getCol,
   getRows,
   setCell,
   atBoard,
@@ -264,5 +284,6 @@ export {
   setRandomCellUnsolved,
   init,
   getCellsWithCandidates,
-  initializeCandidates
+  initializeCandidates,
+  getCellsInBlockByCandidateValue
 };

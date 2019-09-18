@@ -14,51 +14,15 @@
   import { randomizePuzzle } from "./board/generate";
   import { solve } from "./engine/solver";
   import { isSolved as isCellSolved } from "./board/actions/cell";
+  import formatSteps from "./formatSteps";
 
   let store, board, state;
   let loading = false;
   let difficulty = 0;
-  let desiredDifficulty = 35;
+  let desiredDifficulty = 42;
   let steps = null;
   let generateFn;
   let error = null;
-
-  const coord = item => `${String.fromCharCode(0x41 + item.y)}${item.x + 1}`;
-
-  const formatSteps = steps => {
-    return steps
-      ? steps
-          .map((step, i) => {
-            const title = `${i + 1}: ${step.type}: `;
-            let data = "";
-            if (step.solved) {
-              data += step.solved.map(
-                solved => `${solved.value} at ${coord(solved)}`
-              );
-            }
-            if (step.tuple) {
-              data += `${step.tuple} `;
-            }
-            if (step.eliminations) {
-              data += `because of ${step.cause
-                .map(a => `${coord(a)}`)
-                .join(", ")} eliminate ${step.eliminations
-                .map(
-                  elimination =>
-                    `${JSON.stringify(
-                      elimination.eliminatedCandidates
-                    )} at ${coord(elimination)}`
-                )
-                .join(", ")}`;
-            }
-            /* `${step.cell.value} at (${step.cell.x},${
-                step.cell.y
-              })` */
-            return title + data;
-          })
-          .join("\n")
-      : "";
-  };
 
   const generate = () => {
     loading = true;
@@ -72,11 +36,11 @@
         error = null;
       })
       .catch(err => {
-        loading = false;
+        // loading = false;
         error = err;
         setTimeout(() => {
           generate();
-        }, 200);
+        }, 100);
       });
   };
 
@@ -90,6 +54,7 @@
     if (steps && steps.length > 0) {
       store.dispatch({ type: HIGHLIGHT, payload: { cell: {} } });
       store.dispatch({ type: APPLY_STEPS, payload: steps.slice(0, 1) });
+      store.dispatch({ type: UPDATE_CANDIDATES });
       state = store.getState();
     }
     setTimeout(() => {
@@ -116,27 +81,37 @@
 {#if store}
   <div class="container">
     <h1>Sudoccu</h1>
-    <div>
-      <button on:click={generate} disabled={loading}>Generate</button>
-      <button on:click={applyNextStep} disabled={loading}>
-        Apply next step
-      </button>
-      <label>
-        Difficulty:
-        <input type="number" bind:value={desiredDifficulty} />
-      </label>
-    </div>
-    {#if loading}
-      <p>Generating, please wait</p>
-    {:else if error !== null}
-      <p>{error}</p>
-    {:else}
-      <div class="board-container">
-        <SudokuBoard {store} {state} {handleCellClick} />
+    <div class="layout">
+      <div>
+        {#if loading}
+          <p>Generating, please wait</p>
+        {:else if error !== null}
+          <p>{error}</p>
+        {:else}
+          <div class="board-container">
+            <SudokuBoard {store} {state} {handleCellClick} />
+          </div>
+        {/if}
       </div>
-      <p>Difficulty: {difficulty}</p>
-      <pre>{formatSteps(steps)}</pre>
-    {/if}
-
+      <div>
+        <div class="controls">
+          <button on:click={generate} disabled={loading}>Generate</button>
+          <button on:click={applyNextStep} disabled={loading}>
+            Apply next step
+          </button>
+          <label>
+            Difficulty:
+            <input type="number" bind:value={desiredDifficulty} />
+          </label>
+        </div>
+        <p>Difficulty: {difficulty}</p>
+        <div class="steps">
+          {#each formatSteps(steps).split('\n') as step}
+            {step}
+            <br />
+          {/each}
+        </div>
+      </div>
+    </div>
   </div>
 {/if}

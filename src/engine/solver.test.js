@@ -1,6 +1,8 @@
-import { solve, filterCandidates, NAKED_SINGLE } from "./solver";
-import { init, atBoard } from "../board/actions/board";
+import * as R from "ramda";
+import { solve, filterCandidates, NAKED_SINGLE, applySteps } from "./solver";
+import { init, atBoard, updateCandidates } from "../board/actions/board";
 import { newCell } from "../board/actions/cell";
+import formatSteps from "../formatSteps";
 
 const size = 9;
 
@@ -48,6 +50,28 @@ const TEST_NAKED_PAIRS = `597.4..3.
 28.....1.
 `;
 
+const TEST_NAKED_SINGLES_AND_PAIRS = `41.928...
+.56.1.82.
+283.75149
+56...7..2
+8....961.
+..42.175.
+64985.271
+7.519.486
+..87.639.
+`;
+
+const TEST_POINTING_PAIRS = `.32..61..
+41.......
+...9.1...
+5...9...4
+.6.....71
+3...2...5
+...5.8...
+......519
+.57..986.
+`;
+
 const blockOf = data => {
   return data.split(" ").map((spec, i) => {
     const cell = newCell(0, i);
@@ -93,6 +117,18 @@ describe("solver", () => {
     });
   });
 
+  describe("updateCandidates", () => {
+    it("sets the correct initial state", () => {
+      const data = TEST_NAKED_SINGLES_AND_PAIRS;
+      const board = init(size)(data);
+      const result = updateCandidates(size)(board)();
+      expect(atBoard(size)(result)(2, 0).candidates).toEqual([7]);
+      expect(atBoard(size)(result)(2, 4).candidates).toEqual([2, 7]);
+      expect(atBoard(size)(result)(0, 1).candidates).toEqual([9]);
+      expect(atBoard(size)(result)(4, 5).candidates).toEqual([3, 6, 8]);
+    });
+  });
+
   describe("solve", () => {
     it("return 0 steps for solved puzzle", () => {
       const data = TEST_SOLVED;
@@ -132,6 +168,43 @@ describe("solver", () => {
       const steps = solve(size)(board);
       // expect(steps.length).toEqual(27);
       expect(steps.map(a => a.type)).toContain("nakedPair");
+    });
+
+    it("solves pointing pairs", () => {
+      const data = TEST_POINTING_PAIRS;
+      const board = init(size)(data);
+      const steps = solve(size)(board, true);
+      expect(steps.map(a => a.type)).toContain("pointingPair");
+    });
+
+    it("creates a solution that does not change during applying steps", () => {
+      const data = TEST_NAKED_SINGLES_AND_PAIRS;
+      const board = init(size)(data);
+      const steps = solve(size)(board);
+      //console.log(formatSteps(steps));
+      let result = board;
+      // TODO
+      /* for (let i = 0; i < steps.length; ++i) {
+        const step = steps[i];
+        const remainingSteps = steps.slice(i + 1);
+        result = applySteps(size)(result)([step]);
+        const newSteps = solve(size)(result);
+        for (let j = 0; j < remainingSteps.length; ++j) {
+          const remStep = remainingSteps[j];
+          if (!R.equals(remStep, newSteps[j])) {
+            console.log(
+              "No match at",
+              i,
+              j,
+              "\n",
+              formatSteps([remStep, newSteps[j]])
+            );
+          } else {
+            console.log("matched", i, j, formatSteps([remStep]));
+          }
+        }
+        expect(remainingSteps).toEqual(newSteps);
+      } */
     });
   });
 });

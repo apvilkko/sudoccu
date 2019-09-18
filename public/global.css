@@ -13,6 +13,17 @@ body {
 }
 
 .board {
+  margin: 0;
+  padding: 0;
+  border-spacing: 0;
+}
+
+.row {
+  margin: 0;
+  padding: 0;
+}
+
+/* .board {
   display: grid;
   min-width: 60vw;
   min-height: 60vh;
@@ -25,7 +36,7 @@ body {
 
 .board-16 {
   grid-template-columns: repeat(16, 1fr);
-}
+} */
 
 button {
   display: flex;
@@ -33,17 +44,32 @@ button {
   margin-bottom: 1rem;
 }
 
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.controls {
+  display: flex;
+  width: 90%;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .cell {
+  margin: 0;
   cursor: pointer;
   position: relative;
+  height: 3.7rem;
+  width: 3.7rem;
+  border: 1px solid black;
+}
+
+.cell-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: auto;
-  min-height: 2.5rem;
-  width: auto;
-  min-width: 2rem;
-  border: 1px solid black;
 }
 
 .region-x {
@@ -66,8 +92,14 @@ button {
 }
 
 .board-container {
+  margin-right: 1rem;
+  margin-bottom: 1rem;
   display: flex;
   justify-content: center;
+}
+
+.steps {
+  max-width: 28em;
 }
 
 .candidate {
@@ -109,6 +141,7 @@ button {
 
 .highlight-match .value {
   font-weight: 700;
+  font-size: 2.8rem;
 }
 
 .highlight-block {
