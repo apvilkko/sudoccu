@@ -49,14 +49,14 @@
             class:highlight-match={isValueHighlight(item) || isCandidateHighlight(item)}
             class:region-x={item.x % dim === dim - 1}
             class:region-y={item.y % dim === dim - 1}
-            title={DEBUG ? `(${item.x},${item.y}) solved: ${isSolved(item)}; value: ${item.value}; solvedValue: ${item.solvedValue}; candidates: ${JSON.stringify(item.candidates)}` : ''}
+            title={DEBUG ? `(${item.x},${item.y}) solved: ${isSolved(item)}; value: ${item.value}; solvedValue: ${item.solvedValue}; candidates: ${JSON.stringify(item.candidates)} :: ${JSON.stringify(item)}` : ''}
             on:click={() => handleCellClick(item)}>
             <div class="cell-container">
               <span class="value">
                 {item.solvedValue || (DEBUG ? `(${item.value})` : '')}
               </span>
               {#if !item.solvedValue}
-                {#each item.candidates as candidate}
+                {#each item.solvedCandidates as candidate}
                   <span
                     class={`candidate candidate-${candidate}`}
                     class:highlight-candidate={hl.on && highlight.value === candidate}>

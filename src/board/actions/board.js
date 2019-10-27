@@ -183,7 +183,7 @@ const setRow = size => board => ({ y, row, setSolved }) => {
 /**
  * Updates candidates so that solved cells are removed from applicable blocks
  */
-const updateCandidates = size => board => () => {
+const updateCandidates = size => board => solvedAlso => {
   const set = setCell(size);
   const get = atBoard(size);
   let newBoard = board;
@@ -192,12 +192,16 @@ const updateCandidates = size => board => () => {
       const existing = getIntersectValuesAtBoard(size)(board)(x, y, true);
       const cell = get(newBoard)(x, y);
       // console.log("update", existing, cell);
-      newBoard = set(newBoard)({
+      const newCell = {
         ...cell,
         candidates: cell.solvedValue
           ? []
           : R.without(existing)(getCandidates(cell))
-      });
+      };
+      if (solvedAlso) {
+        newCell.solvedCandidates = [...newCell.candidates];
+      }
+      newBoard = set(newBoard)(newCell);
     }
   }
   return newBoard;

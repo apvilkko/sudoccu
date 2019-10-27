@@ -1,3 +1,4 @@
+import * as R from "ramda";
 import { SET_BOARD } from "./actions/constants";
 import { getRandomWithout, randomBlock } from "../engine/math";
 import { solve, getDifficulty } from "../engine/solver";
@@ -40,7 +41,7 @@ const doRandomize = size => {
     board = setRow(size)(board)({ y, row: block, setSolved: true });
     const rowValues = values(getRow(size)(board)(y));
     if (rowValues.length === size && isValid(size)(board)()) {
-      console.log(`${y} is ok, move on to ${y + 1}`, rowValues);
+      //console.log(`${y} is ok, move on to ${y + 1}`, rowValues);
       y++;
       tries = 0;
     } else {
@@ -67,6 +68,7 @@ const randomize = async size => {
       break;
     }
     await sleep(5);
+    console.log("randomize fail");
     tries++;
   }
   console.log("randomize return", board);
@@ -76,40 +78,76 @@ const randomize = async size => {
 const randomizePuzzle = async (store, difficulty = 0) => {
   console.log("randomizePuzzle");
   const size = getSize(store.getState());
-  let board = await randomize(size);
-  if (!board) {
+  const boards = {};
+  boards.current = await randomize(size);
+  if (!boards.current) {
     throw new Error("unable to generate");
   }
-  let puzzleDifficulty = 0;
+  boards.original = R.clone(boards.current);
+
+  let puzzleDifficulty;
   let steps = null;
   let tries = 0;
-  let achievedDifficulty = 0;
+  let achievedDifficulty;
+  let triesWithSameBoard = 0;
+
+  const reset = () => {
+    puzzleDifficulty = 0;
+    achievedDifficulty = 0;
+  };
+
+  const retryWithSame = async part => {
+    triesWithSameBoard++;
+    if (triesWithSameBoard % 5) {
+      await sleep(1);
+    }
+    if (triesWithSameBoard > 8) {
+      throw new Error("bailout with same board");
+    }
+    boards.current = R.clone(boards.original);
+    console.log(part, "... retry with same");
+    reset();
+  };
+
+  reset();
+
   while (true) {
-    console.log("set random unsolved");
-    board = setRandomCellUnsolved(size)(board);
-    console.log("solving", board);
-    steps = solve(size)(board);
+    //console.log("set random unsolved");
+    boards.current = setRandomCellUnsolved(size)(boards.current);
+    try {
+      steps = solve(size)(boards.current);
+    } catch (err) {
+      await retryWithSame(1);
+      continue;
+    }
+
     puzzleDifficulty = getDifficulty(steps);
     if (puzzleDifficulty >= achievedDifficulty) {
       achievedDifficulty = puzzleDifficulty;
     }
-    console.log("puzzleDifficulty", puzzleDifficulty);
     const difficultEnough = puzzleDifficulty >= difficulty;
     if (difficultEnough) {
+      console.log("... achieved difficulty");
       break;
     }
     if (achievedDifficulty > puzzleDifficulty) {
-      throw new Error(
+      await retryWithSame(2);
+      continue;
+
+      //console.log("... randomizePuzzle throw");
+      /* throw new Error(
         "could only generate difficulty of " + achievedDifficulty
-      );
+      ); */
     }
     tries++;
     if (tries > 5000) {
+      console.log("... randomizePuzzle unable");
       throw new Error("unable to generate");
     }
   }
   // initializeCandidates(size)(board);
-  store.dispatch({ type: SET_BOARD, payload: board });
+  store.dispatch({ type: SET_BOARD, payload: boards.current });
+  console.log("puzzle difficulty is", puzzleDifficulty);
   return { difficulty: puzzleDifficulty, steps };
 };
 

@@ -151,3 +151,11 @@ button {
 .highlight {
   background: #bbb;
 }
+
+.pencil {
+  opacity: 0.5;
+}
+
+.pencil.active {
+  opacity: 1;
+}
