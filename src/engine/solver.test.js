@@ -1,8 +1,7 @@
-import * as R from "ramda";
-import { solve, filterCandidates, NAKED_SINGLE, applySteps } from "./solver";
+import { solve } from "./solver";
 import { init, atBoard, updateCandidates } from "../board/actions/board";
 import { newCell } from "../board/actions/cell";
-import formatSteps from "../formatSteps";
+import { filterCandidates, NAKED_SINGLE } from "./strategies/common";
 
 const size = 9;
 
@@ -70,6 +69,28 @@ const TEST_POINTING_PAIRS = `.32..61..
 ...5.8...
 ......519
 .57..986.
+`;
+
+const TEST_X_WING = `1.....569
+492.561.8
+.561.924.
+..964.8.1
+.64.1....
+218.356.4
+.4.5...16
+9.5.614.2
+621.....5
+`;
+
+const TEST_X_WING_2 = `.......94
+76.91..5.
+.9...2.81
+.7..5..1.
+...7.9...
+.8..31.67
+24.1...7.
+.1..9..45
+9.....1..
 `;
 
 const blockOf = data => {
@@ -175,6 +196,26 @@ describe("solver", () => {
       const board = init(size)(data);
       const steps = solve(size)(board, true);
       expect(steps.map(a => a.type)).toContain("pointingPair");
+    });
+
+    it("solves x-wing", () => {
+      const data = TEST_X_WING;
+      const board = init(size)(data);
+      const steps = solve(size)(board, true);
+      const xwings = steps.filter(a => a.type === "x-wing");
+      expect(xwings.length > 0).toBeTruthy();
+    });
+
+    it("solves x-wing, 2nd orientation", () => {
+      const data = TEST_X_WING_2;
+      const board = init(size)(data);
+      const steps = solve(size)(board, true);
+      const xwings = steps.filter(a => a.type === "x-wing");
+      console.log(xwings);
+      xwings.forEach(xwing => {
+        console.log(xwing.eliminations.map(x => x.eliminatedCandidates[0]));
+      });
+      expect(xwings.length > 0).toBeTruthy();
     });
 
     it("creates a solution that does not change during applying steps", () => {
