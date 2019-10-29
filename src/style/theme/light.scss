@@ -1,0 +1,21 @@
+$body-bg: white;
+$body-color: black;
+
+$color-accent: #f77;
+
+$btn-bg: $body-bg;
+$btn-color: $body-color;
+
+$highlight-bg: #999;
+$highlight-match-color: #ccc;
+$highlight-block-bg: desaturate(lighten($color-accent, 10%), 60%);
+
+$candidate-color: #777;
+
+$cell-border-color: $body-color;
+
+$highlight-shadow-color: transparentize($body-color, 0.25);
+
+@import "../app.scss";
+
+/*__END__*/

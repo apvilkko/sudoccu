@@ -4,6 +4,10 @@ import buble from "rollup-plugin-buble";
 import livereload from "rollup-plugin-livereload";
 import commonjs from "rollup-plugin-commonjs";
 import { terser } from "rollup-plugin-terser";
+import scss from "rollup-plugin-scss";
+import { writeFileSync } from "fs";
+
+const path = require("path");
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -16,6 +20,15 @@ export default {
     file: "public/bundle.js"
   },
   plugins: [
+    scss({
+      output: (styles, styleNodes) => {
+        Object.keys(styleNodes).forEach((filename, i) => {
+          const out = styles.split("/*__END__*/");
+          const outname = `public/${path.parse(filename).name}.css`;
+          writeFileSync(outname, out[i]);
+        });
+      }
+    }),
     svelte({
       // enable run-time checks when not in production
       dev: !production,

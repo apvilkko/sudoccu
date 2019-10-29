@@ -28,6 +28,36 @@
   let steps = null;
   let generateFn;
   let error = null;
+  let theme = "dark";
+
+  const THEMES = ["dark", "light"];
+
+  $: {
+    if (theme) {
+      const els = document.getElementsByTagName("link");
+      const current = `${theme}.css`;
+      let found = false;
+      for (let i = 0; i < els.length; ++i) {
+        const href = els[i].href.split("/").pop();
+        if (href === "bundle.css") {
+          continue;
+        }
+        if (href !== current) {
+          found = true;
+          els[i].href = els[i].href
+            .replace(href, current)
+            .split("/")
+            .pop();
+        }
+      }
+      if (!found) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = current;
+        document.head.appendChild(link);
+      }
+    }
+  }
 
   const generate = () => {
     loading = true;
@@ -88,6 +118,10 @@
     state = store.getState();
   };
 
+  const nextTheme = () => {
+    theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+  };
+
   const HANDLED_KEYS = [
     "ArrowUp",
     "ArrowDown",
@@ -103,7 +137,8 @@
     "8",
     "9",
     "Delete",
-    "p"
+    "p",
+    "t"
   ];
 
   const handleKeydown = evt => {
@@ -111,6 +146,8 @@
       evt.preventDefault();
       if (evt.key === "p") {
         store.dispatch({ type: SET_PENCIL });
+      } else if (evt.key === "t") {
+        nextTheme();
       } else {
         store.dispatch({ type: KEY_EVENT, payload: { value: evt.key } });
       }
@@ -118,11 +155,20 @@
     }
   };
 
+  const handleSize = () => {
+    const landscape = window.innerWidth > window.innerHeight;
+    document.body.className = landscape ? "landscape" : "portrait";
+  };
+
   onMount(() => {
     store = createStore();
     store.dispatch({ type: INIT });
     state = store.getState();
     generate();
+
+    window.addEventListener("resize", handleSize);
+    window.addEventListener("orientationchange", handleSize);
+    handleSize();
   });
 </script>
 
@@ -176,6 +222,21 @@
           {/each}
         </div>
       </div>
+    </div>
+    <div>
+      <label for="theme">Theme</label>
+      <select
+        id="theme"
+        name="theme"
+        on:change={evt => {
+          theme = evt.target.value;
+        }}>
+        {#each THEMES as themeChoice}
+          <option value={themeChoice} selected={theme === 'themeChoice'}>
+            {themeChoice}
+          </option>
+        {/each}
+      </select>
     </div>
   </div>
 {/if}
