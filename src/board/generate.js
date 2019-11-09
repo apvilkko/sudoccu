@@ -91,11 +91,14 @@ const randomizePuzzle = async (store, difficulty = 0) => {
   let achievedDifficulty;
   let triesWithSameBoard = 0;
   let initialStep = true;
-  let initialStepSize = 4;
+  let initialStepSize = 30;
+  let goodCandidate = null;
+  let goodCandidateCounter = 0;
 
   const reset = () => {
     puzzleDifficulty = 0;
     achievedDifficulty = 0;
+    initialStep = true;
   };
 
   const retryWithSame = async part => {
@@ -103,11 +106,19 @@ const randomizePuzzle = async (store, difficulty = 0) => {
     if (triesWithSameBoard % 5) {
       await sleep(1);
     }
-    if (triesWithSameBoard > 8) {
+    if (triesWithSameBoard > 16) {
       throw new Error("bailout with same board");
     }
-    boards.current = R.clone(boards.original);
-    console.log(part, "... retry with same");
+    if (goodCandidate && goodCandidateCounter < 100) {
+      console.log(part, "... retry with >1 candidate");
+      boards.current = R.clone(goodCandidate);
+      goodCandidateCounter++;
+    } else {
+      console.log(part, "... retry with same");
+      boards.current = R.clone(boards.original);
+      goodCandidate = null;
+      goodCandidateCounter = 0;
+    }
     reset();
   };
 
@@ -115,7 +126,14 @@ const randomizePuzzle = async (store, difficulty = 0) => {
 
   while (true) {
     //console.log("set random unsolved");
-    boards.current = setRandomCellUnsolved(size)(boards.current);
+    if (initialStep) {
+      for (let i = 0; i < initialStepSize; ++i) {
+        boards.current = setRandomCellUnsolved(size)(boards.current);
+      }
+      initialStep = false;
+    } else {
+      boards.current = setRandomCellUnsolved(size)(boards.current);
+    }
 
     try {
       steps = solve(size)(boards.current);
@@ -124,7 +142,12 @@ const randomizePuzzle = async (store, difficulty = 0) => {
       continue;
     }
 
-    puzzleDifficulty = getDifficulty(steps);
+    const diff = getDifficulty(steps);
+    puzzleDifficulty = diff[0];
+    if (diff[1]) {
+      console.log(diff);
+      goodCandidate = R.clone(boards.current);
+    }
     if (puzzleDifficulty >= achievedDifficulty) {
       achievedDifficulty = puzzleDifficulty;
     }

@@ -188,6 +188,7 @@ describe("solver", () => {
       const types = steps.map(a => a.type);
       expect(types).toEqual(["nakedSingle", "nakedSingle", "nakedSingle"]);
       expect(coords.length).toEqual(3);
+      expect(steps[0].solved[0].candidates).toEqual([9]);
       expect(coords).toContainEqual({ x: 2, y: 0 });
       expect(coords).toContainEqual({ x: 7, y: 3 });
       expect(coords).toContainEqual({ x: 6, y: 6 });
@@ -209,8 +210,23 @@ describe("solver", () => {
       const data = TEST_NAKED_PAIRS;
       const board = init(size)(data);
       const steps = solve(size)(board, true);
-      // expect(steps.length).toEqual(27);
-      expect(steps.map(a => a.type)).toContain("nakedPair");
+      const matches = steps.filter(a => a.type === "nakedPair");
+      expect(matches.length > 0).toBeTruthy();
+
+      expect(matches[0].tuple).toEqual([1, 2]);
+      expect(matches[0].eliminations.length).toEqual(1);
+      expect(matches[0].eliminations[0].x).toEqual(5);
+      expect(matches[0].eliminations[0].y).toEqual(1);
+      expect(matches[0].eliminations[0].eliminatedCandidates).toEqual([1, 2]);
+
+      expect(matches[1].tuple).toEqual([4, 7]);
+      expect(matches[1].eliminations.length).toEqual(2);
+      expect(matches[1].eliminations[0].x).toEqual(2);
+      expect(matches[1].eliminations[0].y).toEqual(7);
+      expect(matches[1].eliminations[0].eliminatedCandidates).toEqual([7]);
+      expect(matches[1].eliminations[1].x).toEqual(2);
+      expect(matches[1].eliminations[1].y).toEqual(8);
+      expect(matches[1].eliminations[1].eliminatedCandidates).toEqual([7]);
     });
 
     it("solves pointing pairs", () => {
@@ -246,6 +262,19 @@ describe("solver", () => {
       const steps = solve(size)(board, true);
       const matches = steps.filter(a => a.type === "hiddenPair");
       expect(matches.length > 0).toBeTruthy();
+
+      expect(matches[0].tuple).toEqual([2, 4]);
+      expect(matches[0].eliminations.length).toEqual(2);
+      expect(matches[0].eliminations[0].x).toEqual(2);
+      expect(matches[0].eliminations[0].y).toEqual(3);
+      expect(matches[0].eliminations[0].eliminatedCandidates).toEqual([5, 6]);
+      expect(matches[0].eliminations[1].x).toEqual(2);
+      expect(matches[0].eliminations[1].y).toEqual(4);
+      expect(matches[0].eliminations[1].eliminatedCandidates).toEqual([
+        3,
+        6,
+        7
+      ]);
     });
 
     it("solves hidden triples", () => {

@@ -1,6 +1,5 @@
 <script>
   import { onMount } from "svelte";
-  import Board from "./engine/Board";
   import SudokuBoard from "./SudokuBoard.svelte";
   import NumberPicker from "./NumberPicker.svelte";
   import createStore from "./board/store";

@@ -86,10 +86,22 @@ const getCost = step => {
       return 1;
     case NAKED_PAIR:
       return 2;
+    case NAKED_TRIPLE:
+      return 3;
+    case NAKED_QUAD:
+      return 4;
+    case HIDDEN_SINGLE:
+      return 2;
+    case HIDDEN_PAIR:
+      return 4;
+    case HIDDEN_TRIPLE:
+      return 6;
+    case HIDDEN_QUAD:
+      return 8;
     case POINTING_PAIR:
       return 2;
     case X_WING:
-      return 4;
+      return 8;
     default:
       return 1;
   }

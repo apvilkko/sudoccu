@@ -181,12 +181,15 @@ const hiddenSets = (degree, desiredType) => (board, size) => addStep => {
           tuple,
           ...payload
         });
-        /*console.log(
-          "SDC add step",
-          type + tupleType,
-          tuple,
-          JSON.stringify(payload)
-        );*/
+        if (degree > 1) {
+          console.log(
+            "SDC add step",
+            type + tupleType,
+            tuple,
+            JSON.stringify(payload)
+          );
+        }
+
         addStep(newStep);
       }
     }

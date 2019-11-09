@@ -61,9 +61,15 @@ const addStep = (steps, step) => {
 };
 
 const getDifficulty = steps => {
-  return steps.reduce((acc, current) => {
-    return acc + getCost(current);
+  let hadComplex = false;
+  const total = steps.reduce((acc, current) => {
+    const cost = getCost(current);
+    if (cost > 1) {
+      hadComplex = true;
+    }
+    return acc + cost;
   }, 0);
+  return [total, hadComplex];
 };
 
 const applySteps = size => board => steps => {
