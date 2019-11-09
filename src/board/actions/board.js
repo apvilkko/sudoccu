@@ -136,6 +136,23 @@ const getCellsWithCandidates = (candidates, block) => {
   return out;
 };
 
+const getAllCellsWithCandidate = (value, block, minAmount, maxCandidates) => {
+  const out = [];
+  block.forEach(cell => {
+    if (isCellSolved(cell)) {
+      return;
+    }
+    const cands = getCandidates(cell);
+    const incl = cands.includes(value);
+    const maxOk =
+      typeof maxCandidates === "undefined" || cands.length <= maxCandidates;
+    if (maxOk && incl) {
+      out.push(cell);
+    }
+  });
+  return out.length >= minAmount ? out : [];
+};
+
 const getCellsInBlockByCandidateValue = (
   value,
   amount,
@@ -147,7 +164,9 @@ const getCellsInBlockByCandidateValue = (
     if (isCellSolved(cell)) {
       return;
     }
-    if (getCandidates(cell).includes(value)) {
+    const cands = getCandidates(cell);
+    const incl = cands.includes(value);
+    if (incl) {
       out.push(cell);
     }
   });
@@ -289,5 +308,6 @@ export {
   init,
   getCellsWithCandidates,
   initializeCandidates,
-  getCellsInBlockByCandidateValue
+  getCellsInBlockByCandidateValue,
+  getAllCellsWithCandidate
 };

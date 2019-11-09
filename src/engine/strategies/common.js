@@ -5,11 +5,27 @@ import {
   getCandidates
 } from "../../board/actions/cell";
 import { sort } from "../utils";
+import { uniq } from "../math";
 
-export const NAKED_SINGLE = "nakedSingle";
-export const NAKED_PAIR = "nakedPair";
-export const POINTING_PAIR = "pointingPair";
+export const NAKED = "naked";
+export const HIDDEN = "hidden";
+export const SINGLE = "Single";
+export const PAIR = "Pair";
+export const TRIPLE = "Triple";
+export const QUAD = "Quad";
+export const NAKED_SINGLE = NAKED + SINGLE;
+export const HIDDEN_SINGLE = HIDDEN + SINGLE;
+export const NAKED_PAIR = NAKED + PAIR;
+export const HIDDEN_PAIR = HIDDEN + PAIR;
+export const NAKED_TRIPLE = NAKED + TRIPLE;
+export const HIDDEN_TRIPLE = HIDDEN + TRIPLE;
+export const NAKED_QUAD = NAKED + QUAD;
+export const HIDDEN_QUAD = HIDDEN + QUAD;
+export const POINTING_PAIR = "pointing" + PAIR;
 export const X_WING = "x-wing";
+
+const getAvailableCandidates = block =>
+  uniq(R.flatten(block.map(c => getCandidates(c))));
 
 const filterCandidates = degree => block => {
   const cells = block.filter(x => !isCellSolved(x) && hasCandidates(x)(degree));
@@ -38,15 +54,29 @@ const filterCandidates = degree => block => {
   )(seen);
 };
 
-const step = (type, data) => {
-  const cleaned = data;
-  if (data && data.solved) {
-    cleaned.solved = R.map(R.omit(["solvedValue"]))(data.solved);
+const sortByCoords = R.sortWith([R.ascend(R.prop("x")), R.ascend(R.prop("y"))]);
+
+const mapPick = (key, keys) => data => {
+  if (data && data[key]) {
+    const sorter = keys.indexOf("x") > -1 ? sortByCoords : R.identity;
+    return {
+      ...data,
+      [key]: sorter(R.map(R.pick(keys))(data[key]))
+    };
   }
-  return {
+  return data;
+};
+
+const step = (type, data) => {
+  const cleanStep = {
     type,
-    ...cleaned
+    ...R.pipe(
+      mapPick("solved", ["x", "y", "value", "candidates"]),
+      mapPick("eliminations", ["x", "y", "eliminatedCandidates"]),
+      mapPick("cause", ["x", "y", "value", "candidates"])
+    )(data)
   };
+  return cleanStep;
 };
 
 // http://www.sudoku-help.com/SHD-Ratings.htm
@@ -65,4 +95,4 @@ const getCost = step => {
   }
 };
 
-export { filterCandidates, step, getCost };
+export { filterCandidates, step, getCost, getAvailableCandidates };

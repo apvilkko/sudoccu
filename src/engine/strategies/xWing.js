@@ -7,6 +7,7 @@ import {
   getCellsInBlockByCandidateValue
 } from "../../board/actions/board";
 import { step, X_WING } from "./common";
+import { uniq } from "../math";
 
 const xWing = (board, size) => addStep => {
   const candidates = {};
@@ -31,8 +32,8 @@ const xWing = (board, size) => addStep => {
       const cands = candidates[blockType][value];
       if (cands.length) {
         const numberValue = Number(value);
-        const xs = R.uniq(cands.map(c => c.x));
-        const ys = R.uniq(cands.map(c => c.y));
+        const xs = uniq(cands.map(c => c.x));
+        const ys = uniq(cands.map(c => c.y));
         if (blockType === "row" && xs.length === 2) {
           // console.log(blockType, value, cands);
           xs.forEach(x => {

@@ -1,28 +1,49 @@
-import nakedSingles from "./nakedSingles";
-import nakedPairs from "./nakedPairs";
 import pointingPairs from "./pointingPairs";
+import hiddenSets from "./hiddenSets";
 import xWing from "./xWing";
+import { NAKED, HIDDEN } from "./common";
 
-export default [nakedSingles, nakedPairs, pointingPairs, xWing];
+// Following the order in http://www.sudokuwiki.org/Sudoku_Creation_and_Grading.pdf
 
-// triples
+export default [
+  /* Naked/hidden tuples */
+  hiddenSets(1, NAKED),
+  hiddenSets(1, HIDDEN),
+  hiddenSets(2, NAKED),
+  hiddenSets(2, HIDDEN),
+  hiddenSets(3, NAKED),
+  hiddenSets(3, HIDDEN),
+  // nakedQuads,
+  // hiddenQuads,
 
-// Box/line reduction
+  /* Intersection removal */
+  pointingPairs,
+  // pointing triples
+  // Box/line reduction
 
-// Simple colouring
-// Y-wing
-// Swordfish
-// XYZ-wing
+  xWing
+
+  // Simple colouring
+
+  // Y-wing
+  // Swordfish
+  // X-Cycles
+  // XY-Chain
+  // 3D Medusa
+  // Jellyfish
+
+  // Avoidable rectangle
+  // Unique Rectangles
+  // Hidden Unique Rect's
+  // Extended Unique Rect. ?
+
+  // XYZ-wing
+];
 
 /*
-X-Cycles
+
 BUG
-XY-Chain
-3D Medusa
-Jellyfish
-Unique Rectangles
-Extended Unique Rect.
-Hidden Unique Rect's
+
 WXYZ Wing
 Aligned Pair Exclusion
 

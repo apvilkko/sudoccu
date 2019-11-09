@@ -7,6 +7,7 @@ import {
   getCellsInBlockByCandidateValue
 } from "../../board/actions/board";
 import { step, POINTING_PAIR } from "./common";
+import { uniq } from "../math";
 
 const pointingPairs = (board, size) => addStep => {
   iterateBlocks(size)(board)((block, blockType) => {
@@ -19,7 +20,7 @@ const pointingPairs = (board, size) => addStep => {
       const directions = [["y", "x", getRow], ["x", "y", getCol]];
 
       directions.forEach(([sameProp, existProp, getter]) => {
-        const isSame = R.uniq(R.map(R.prop(sameProp))(candidates)).length === 1;
+        const isSame = uniq(R.map(R.prop(sameProp))(candidates)).length === 1;
 
         if (isSame) {
           const candidateBlock = getter(size)(board)(candidates[0][sameProp]);

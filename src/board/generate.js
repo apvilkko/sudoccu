@@ -90,6 +90,8 @@ const randomizePuzzle = async (store, difficulty = 0) => {
   let tries = 0;
   let achievedDifficulty;
   let triesWithSameBoard = 0;
+  let initialStep = true;
+  let initialStepSize = 4;
 
   const reset = () => {
     puzzleDifficulty = 0;
@@ -114,6 +116,7 @@ const randomizePuzzle = async (store, difficulty = 0) => {
   while (true) {
     //console.log("set random unsolved");
     boards.current = setRandomCellUnsolved(size)(boards.current);
+
     try {
       steps = solve(size)(boards.current);
     } catch (err) {

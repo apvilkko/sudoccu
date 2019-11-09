@@ -23,17 +23,31 @@ const stepMin = prop => step => {
 const ascendRow = R.ascend(stepMin("y"));
 const ascendCol = R.ascend(stepMin("x"));
 const sortSteps = R.sortWith([ascendRow, ascendCol]);
-const sortByCoords = R.sortWith([R.ascend(R.prop("x")), R.ascend(R.prop("y"))]);
 
-const cleanStep = step => ({
+/*const cleanStep = step => ({
   ...step,
   eliminations: sortByCoords(
     R.map(R.pick(["x", "y", "value"]))(step.eliminations || [])
   )
-});
+});*/
+
+const STEP_SECTIONS = ["solved", "eliminations", "cause"];
 
 const isEqualStep = (one, other) => {
-  return R.equals(cleanStep(one), cleanStep(other));
+  if (!one || !other) {
+    return false;
+  }
+  if (one.type !== one.type) {
+    return false;
+  }
+  for (let i = 0; i < STEP_SECTIONS.length; ++i) {
+    const key = STEP_SECTIONS[i];
+    if (one[key] || other[key]) {
+      return R.equals(one[key], other[key]);
+    }
+  }
+  //return R.equals(cleanStep(one), cleanStep(other));
+  return R.equals(one, other);
 };
 
 const addStep = (steps, step) => {
@@ -121,6 +135,9 @@ const solve = size => (boardToSolve, allowUnsolved) => {
     const strategies = STRATEGIES.map(x => x(board, size));
 
     for (let s = 0; s < strategies.length; ++s) {
+      /*console.log("SDC ***");
+      console.log("SDC applying strategy", s);
+      console.log("SDC ***");*/
       successful = applyStrategy(allSteps, addStepFn, strategies[s]);
       if (successful) {
         break;

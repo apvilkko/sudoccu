@@ -38,15 +38,15 @@ const TEST_SINGLES_COMPLEX = `1.4.9..68
 .6.854179
 `;
 
-const TEST_NAKED_PAIRS = `597.4..3.
-348....6.
-612.9..84
-75....49.
-8.9....7.
-4..6...5.
-17..2.64.
-96..83.2.
-28.....1.
+const TEST_NAKED_PAIRS = `.8..9..3.
+.3.....69
+9.2.63158
+.2.8.459.
+8519.7.46
+3946.587.
+563.4.987
+2......15
+.1..5..2.
 `;
 
 const TEST_NAKED_SINGLES_AND_PAIRS = `41.928...
@@ -91,6 +91,28 @@ const TEST_X_WING_2 = `.......94
 24.1...7.
 .1..9..45
 9.....1..
+`;
+
+const TEST_HIDDEN_PAIRS = `72.4.8.3.
+.8.....47
+4.1.768.2
+81.739...
+...851...
+...264.8.
+2.968.413
+34......8
+168943275
+`;
+
+const TEST_HIDDEN_TRIPLES = `.....1.3.
+231.9....
+.65..31..
+6789243..
+1.3.5...6
+...1367..
+..936.57.
+..6.19843
+3........
 `;
 
 const blockOf = data => {
@@ -186,7 +208,7 @@ describe("solver", () => {
     it("solves naked pairs", () => {
       const data = TEST_NAKED_PAIRS;
       const board = init(size)(data);
-      const steps = solve(size)(board);
+      const steps = solve(size)(board, true);
       // expect(steps.length).toEqual(27);
       expect(steps.map(a => a.type)).toContain("nakedPair");
     });
@@ -211,11 +233,27 @@ describe("solver", () => {
       const board = init(size)(data);
       const steps = solve(size)(board, true);
       const xwings = steps.filter(a => a.type === "x-wing");
-      console.log(xwings);
+      /*console.log(xwings);
       xwings.forEach(xwing => {
         console.log(xwing.eliminations.map(x => x.eliminatedCandidates[0]));
-      });
+      });*/
       expect(xwings.length > 0).toBeTruthy();
+    });
+
+    it("solves hidden pairs", () => {
+      const data = TEST_HIDDEN_PAIRS;
+      const board = init(size)(data);
+      const steps = solve(size)(board, true);
+      const matches = steps.filter(a => a.type === "hiddenPair");
+      expect(matches.length > 0).toBeTruthy();
+    });
+
+    it("solves hidden triples", () => {
+      const data = TEST_HIDDEN_TRIPLES;
+      const board = init(size)(data);
+      const steps = solve(size)(board, true);
+      const matches = steps.filter(a => a.type === "hiddenTriple");
+      expect(matches.length > 0).toBeTruthy();
     });
 
     it("creates a solution that does not change during applying steps", () => {

@@ -1,7 +1,7 @@
-import MersenneTwister from "mersenne-twister";
-const generator = new MersenneTwister();
+//import MersenneTwister from "mersenne-twister";
+//const generator = new MersenneTwister();
 
-const random = () => generator.random();
+const random = () => Math.random();
 
 function shuffle(a) {
   var j, x, i;
@@ -39,6 +39,33 @@ const getListWithout = size => (omit, shouldShuffle) => {
 
 const getRandomWithout = size => omit => getListWithout(size)(omit, true)[0];
 
+const getCombinations = (arr, degree) => {
+  const out = [];
+
+  if (degree === 1 && arr.length === 1) {
+    return [[arr[0]]];
+  }
+
+  const iterate = (start, depth, tuple) => {
+    for (let i = start; i < arr.length; ++i) {
+      const next = [...tuple, arr[i]];
+      if (depth > 0) {
+        iterate(i + 1, depth - 1, next);
+      } else {
+        if (next.length === degree) {
+          out.push(next);
+        }
+      }
+    }
+  };
+
+  for (let d = 0; d < degree; ++d) {
+    iterate(0, d, []);
+  }
+
+  return out;
+};
+
 const uniq = arr => {
   const values = {};
   for (let i = 0; i < arr.length; ++i) {
@@ -56,5 +83,6 @@ export {
   isUnique,
   uniq,
   getListWithout,
-  sample
+  sample,
+  getCombinations
 };

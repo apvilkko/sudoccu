@@ -37,6 +37,7 @@
     "start": "sirv public --single",
     "start:dev": "sirv public --single --dev",
     "test": "jest --watch",
+    "test:ci": "jest",
     "lint": "eslint src"
   },
   "browserslist": "Firefox > 66, Chrome > 74"
