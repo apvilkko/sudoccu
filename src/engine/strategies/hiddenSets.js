@@ -175,20 +175,24 @@ const hiddenSets = (degree, desiredType) => (board, size) => addStep => {
         const payload =
           degree === 1
             ? { blockType, solved: candsForValue[0].candidates }
-            : { blockType, eliminations: possibleEliminations };
+            : {
+                blockType,
+                eliminations: possibleEliminations,
+                cause: uniqCoords.map(c => ({ x: c[0], y: c[1] }))
+              };
 
         const newStep = step(type + tupleType, {
           tuple,
           ...payload
         });
-        if (degree > 1) {
+        /*if (degree > 1) {
           console.log(
             "SDC add step",
             type + tupleType,
             tuple,
             JSON.stringify(payload)
           );
-        }
+        }*/
 
         addStep(newStep);
       }

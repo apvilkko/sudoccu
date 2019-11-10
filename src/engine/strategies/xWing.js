@@ -6,7 +6,7 @@ import {
   getCellsWithCandidates,
   getCellsInBlockByCandidateValue
 } from "../../board/actions/board";
-import { step, X_WING } from "./common";
+import { step, X_WING, getAvailableCandidates } from "./common";
 import { uniq } from "../math";
 
 const xWing = (board, size) => addStep => {
@@ -18,8 +18,9 @@ const xWing = (board, size) => addStep => {
     if (!candidates[blockType]) {
       candidates[blockType] = {};
     }
-    for (let i = 0; i < size; ++i) {
-      const value = i + 1;
+    const availableCandidates = getAvailableCandidates(block);
+    for (let i = 0; i < availableCandidates.length; ++i) {
+      const value = availableCandidates[i];
       const biCandidates = getCellsInBlockByCandidateValue(value, 2, block, 2);
       candidates[blockType][value] = [
         ...(candidates[blockType][value] || []),

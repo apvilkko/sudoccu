@@ -10,7 +10,8 @@ import {
   getRow,
   isFilled,
   isValid,
-  setRandomCellUnsolved
+  setRandomCellUnsolved,
+  setRandomCellSolved
 } from "./actions/board";
 import { getSize } from "./selectors";
 
@@ -71,9 +72,18 @@ const randomize = async size => {
     console.log("randomize fail");
     tries++;
   }
-  console.log("randomize return", board);
+  //console.log("randomize return", board);
   return board;
 };
+
+const LEAVE_CLUES = 27 / 81.0;
+
+/**
+ * clue limits:
+ * - 17 absolute minimum
+ * - good average 27, no more than 30-32
+ * - 39 max for minimal puzzle
+ */
 
 const randomizePuzzle = async (store, difficulty = 0) => {
   console.log("randomizePuzzle");
@@ -91,7 +101,10 @@ const randomizePuzzle = async (store, difficulty = 0) => {
   let achievedDifficulty;
   let triesWithSameBoard = 0;
   let initialStep = true;
-  let initialStepSize = 30;
+  let initialStepSize = Math.round(
+    (1 - LEAVE_CLUES) * (size * size) + (Math.random() * 6 - 3)
+  );
+  console.log("initial", initialStepSize);
   let goodCandidate = null;
   let goodCandidateCounter = 0;
 
@@ -114,7 +127,7 @@ const randomizePuzzle = async (store, difficulty = 0) => {
       boards.current = R.clone(goodCandidate);
       goodCandidateCounter++;
     } else {
-      console.log(part, "... retry with same");
+      //console.log(part, "... retry with same");
       boards.current = R.clone(boards.original);
       goodCandidate = null;
       goodCandidateCounter = 0;
@@ -132,7 +145,7 @@ const randomizePuzzle = async (store, difficulty = 0) => {
       }
       initialStep = false;
     } else {
-      boards.current = setRandomCellUnsolved(size)(boards.current);
+      boards.current = setRandomCellSolved(size)(boards.current);
     }
 
     try {
@@ -144,10 +157,10 @@ const randomizePuzzle = async (store, difficulty = 0) => {
 
     const diff = getDifficulty(steps);
     puzzleDifficulty = diff[0];
-    if (diff[1]) {
+    /*if (diff[1]) {
       console.log(diff);
       goodCandidate = R.clone(boards.current);
-    }
+    }*/
     if (puzzleDifficulty >= achievedDifficulty) {
       achievedDifficulty = puzzleDifficulty;
     }

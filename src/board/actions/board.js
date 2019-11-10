@@ -278,6 +278,16 @@ const setRandomCellUnsolved = size => board => {
   return setCell(size)(board)({ ...item, solvedValue: null });
 };
 
+const setRandomCellSolved = size => board => {
+  const available = board.filter(x => !isCellSolved(x));
+  const item = sample(available);
+  // console.log("cell", item, available);
+  if (!item) {
+    throw new Error("no item available!");
+  }
+  return setCell(size)(board)({ ...item, solvedValue: item.value });
+};
+
 // ============================================================
 // utils
 // ============================================================
@@ -309,5 +319,6 @@ export {
   getCellsWithCandidates,
   initializeCandidates,
   getCellsInBlockByCandidateValue,
-  getAllCellsWithCandidate
+  getAllCellsWithCandidate,
+  setRandomCellSolved
 };

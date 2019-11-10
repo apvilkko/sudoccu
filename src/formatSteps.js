@@ -11,8 +11,7 @@ const formatSteps = steps => {
               solved =>
                 `${solved.value || solved.candidates[0]} at ${coord(solved)}`
             );
-          }
-          if (step.tuple) {
+          } else if (step.tuple) {
             data += `${step.tuple} `;
           }
           if (step.eliminations) {

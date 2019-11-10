@@ -218,6 +218,7 @@ describe("solver", () => {
       expect(matches[0].eliminations[0].x).toEqual(5);
       expect(matches[0].eliminations[0].y).toEqual(1);
       expect(matches[0].eliminations[0].eliminatedCandidates).toEqual([1, 2]);
+      expect(matches[0].cause).toEqual([{ x: 5, y: 0 }, { x: 5, y: 6 }]);
 
       expect(matches[1].tuple).toEqual([4, 7]);
       expect(matches[1].eliminations.length).toEqual(2);

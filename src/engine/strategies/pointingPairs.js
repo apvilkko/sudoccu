@@ -6,7 +6,7 @@ import {
   getCellsWithCandidates,
   getCellsInBlockByCandidateValue
 } from "../../board/actions/board";
-import { step, POINTING_PAIR } from "./common";
+import { step, POINTING_PAIR, getAvailableCandidates } from "./common";
 import { uniq } from "../math";
 
 const pointingPairs = (board, size) => addStep => {
@@ -14,8 +14,9 @@ const pointingPairs = (board, size) => addStep => {
     if (blockType !== "block") {
       return;
     }
-    for (let i = 0; i < size; ++i) {
-      const value = i + 1;
+    const availableCandidates = getAvailableCandidates(block);
+    for (let i = 0; i < availableCandidates.length; ++i) {
+      const value = availableCandidates[i];
       const candidates = getCellsInBlockByCandidateValue(value, 2, block, 2);
       const directions = [["y", "x", getRow], ["x", "y", getCol]];
 
