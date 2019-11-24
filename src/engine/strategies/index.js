@@ -1,7 +1,7 @@
-import pointingPairs from "./pointingPairs";
+import intersectionRemoval from "./intersectionRemoval";
 import hiddenSets from "./hiddenSets";
 import xWing from "./xWing";
-import { NAKED, HIDDEN } from "./common";
+import { NAKED, HIDDEN, BOX_LINE_REDUCTION, POINTING } from "./common";
 
 // Following the order in http://www.sudokuwiki.org/Sudoku_Creation_and_Grading.pdf
 
@@ -17,9 +17,8 @@ export default [
   // hiddenQuads,
 
   /* Intersection removal */
-  pointingPairs,
-  // pointing triples
-  // Box/line reduction
+  intersectionRemoval(POINTING), // pointing pairs/triples
+  intersectionRemoval(BOX_LINE_REDUCTION),
 
   xWing
 

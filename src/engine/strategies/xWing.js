@@ -11,8 +11,8 @@ import { uniq } from "../math";
 
 const xWing = (board, size) => addStep => {
   const candidates = {};
-  iterateBlocks(size)(board)((block, blockType, blockIndex) => {
-    if (blockType === "block") {
+  iterateBlocks(size)(board)((block, blockType) => {
+    if (blockType === "box") {
       return;
     }
     if (!candidates[blockType]) {

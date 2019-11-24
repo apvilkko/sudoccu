@@ -25,7 +25,6 @@ const hiddenSets = (degree, desiredType) => (board, size) => addStep => {
       block.map((b, i) => `{${b.x},${b.y}:${b.candidates}}`).join("")
     );*/
     const availableCandidates = getAvailableCandidates(block);
-    const combinations = getCombinations(availableCandidates, degree);
 
     //console.log("SDC available", availableCandidates, combinations);
 
@@ -52,6 +51,11 @@ const hiddenSets = (degree, desiredType) => (board, size) => addStep => {
       cands[value] = { value, type, candidates };
     }
 
+    if (R.isEmpty(cands)) {
+      return;
+    }
+
+    const combinations = getCombinations(availableCandidates, degree);
     for (let comb = 0; comb < combinations.length; ++comb) {
       const combination = combinations[comb];
 
@@ -79,7 +83,7 @@ const hiddenSets = (degree, desiredType) => (board, size) => addStep => {
       )(candsForValue);
 
       // Check that cell coordinates match between candidates
-      if (uniqCoords.length > degree) {
+      if (uniqCoords.length !== degree) {
         /*if (true) {
           console.log(
             "SDC bail 2",

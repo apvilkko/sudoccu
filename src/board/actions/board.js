@@ -42,7 +42,7 @@ const getCol = size => board => x => {
   return out;
 };
 
-const getBlock = size => board => i => {
+const getBox = size => board => i => {
   const dim = getDimFromSize(size);
   const get = atBoard(size);
   const startY = Math.floor(i / dim) * dim;
@@ -107,13 +107,21 @@ const isValid = size => board => () => {
 
   // Blocks
   for (let i = 0; i < size; ++i) {
-    if (!isUnique(values(getBlock(size)(board)(i)))) {
+    if (!isUnique(values(getBox(size)(board)(i)))) {
       // console.log("isValid block", i);
       return false;
     }
   }
 
   return true;
+};
+
+const getBoxIndex = size => cell => {
+  const dim = getDimFromSize(size);
+  const get = atBoard(size);
+  const boxRow = Math.floor(cell.y / dim);
+  const boxCol = Math.floor(cell.x / dim);
+  return boxRow * dim + boxCol;
 };
 
 /**
@@ -296,7 +304,7 @@ const iterateBlocks = size => board => handler => {
   for (let i = 0; i < size; ++i) {
     handler(getRow(size)(board)(i), "row", i);
     handler(getCol(size)(board)(i), "col", i);
-    handler(getBlock(size)(board)(i), "block", i);
+    handler(getBox(size)(board)(i), "box", i);
   }
 };
 
@@ -306,6 +314,7 @@ export {
   isSolved,
   getRow,
   getCol,
+  getBox,
   getRows,
   setCell,
   atBoard,
@@ -320,5 +329,6 @@ export {
   initializeCandidates,
   getCellsInBlockByCandidateValue,
   getAllCellsWithCandidate,
-  setRandomCellSolved
+  setRandomCellSolved,
+  getBoxIndex
 };

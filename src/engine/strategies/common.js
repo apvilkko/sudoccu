@@ -21,7 +21,10 @@ export const NAKED_TRIPLE = NAKED + TRIPLE;
 export const HIDDEN_TRIPLE = HIDDEN + TRIPLE;
 export const NAKED_QUAD = NAKED + QUAD;
 export const HIDDEN_QUAD = HIDDEN + QUAD;
-export const POINTING_PAIR = "pointing" + PAIR;
+export const POINTING = "pointing";
+export const POINTING_PAIR = POINTING + PAIR;
+export const POINTING_TRIPLE = POINTING + TRIPLE;
+export const BOX_LINE_REDUCTION = "boxLineReduction";
 export const X_WING = "x-wing";
 
 const getAvailableCandidates = block =>
@@ -80,6 +83,7 @@ const step = (type, data) => {
 };
 
 // http://www.sudoku-help.com/SHD-Ratings.htm
+// https://www.sudokuwiki.org/Sudoku_Creation_and_Grading.pdf
 const getCost = step => {
   switch (step.type) {
     case NAKED_SINGLE:
@@ -100,6 +104,10 @@ const getCost = step => {
       return 8;
     case POINTING_PAIR:
       return 2;
+    case POINTING_TRIPLE:
+      return 2;
+    case BOX_LINE_REDUCTION:
+      return 3;
     case X_WING:
       return 8;
     default:

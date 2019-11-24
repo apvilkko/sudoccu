@@ -2,6 +2,7 @@ import { solve } from "./solver";
 import { init, atBoard, updateCandidates } from "../board/actions/board";
 import { newCell } from "../board/actions/cell";
 import { filterCandidates, NAKED_SINGLE } from "./strategies/common";
+import formatSteps from "../formatSteps";
 
 const size = 9;
 
@@ -113,6 +114,28 @@ const TEST_HIDDEN_TRIPLES = `.....1.3.
 ..936.57.
 ..6.19843
 3........
+`;
+
+const TEST_POINTING_TRIPLE = `93..5....
+2..63..95
+856..2...
+..318.57.
+..5.2.98.
+.8...5...
+...8..159
+5.821...4
+...56...8
+`;
+
+const TEST_BOX_LINE_REDUCTION = `.16..78.3
+.9.8.....
+87...1.6.
+.48...3..
+65...9.82
+.39...65.
+.6.9...2.
+.8...2936
+9246..51.
 `;
 
 const blockOf = data => {
@@ -235,6 +258,33 @@ describe("solver", () => {
       const board = init(size)(data);
       const steps = solve(size)(board, true);
       expect(steps.map(a => a.type)).toContain("pointingPair");
+    });
+
+    it("solves pointing triples", () => {
+      const data = TEST_POINTING_TRIPLE;
+      const board = init(size)(data);
+      const steps = solve(size)(board, true);
+      const step = steps.filter(a => a.type === "pointingTriple");
+      expect(step.length).toBe(1);
+      expect(step[0].eliminations.length).toBe(1);
+      expect(step[0].eliminations[0]).toEqual({
+        eliminatedCandidates: [3],
+        x: 5,
+        y: 4
+      });
+    });
+
+    it("solves box line reduction", () => {
+      const data = TEST_BOX_LINE_REDUCTION;
+      const board = init(size)(data);
+      const steps = solve(size)(board, true);
+      const step = steps.find(
+        a =>
+          a.type === "boxLineReduction" &&
+          a.tuple[0] === 2 &&
+          a.eliminations.length === 3
+      );
+      expect(!!step).toBeTruthy();
     });
 
     it("solves x-wing", () => {

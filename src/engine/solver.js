@@ -43,7 +43,8 @@ const isEqualStep = (one, other) => {
   for (let i = 0; i < STEP_SECTIONS.length; ++i) {
     const key = STEP_SECTIONS[i];
     if (one[key] || other[key]) {
-      return R.equals(one[key], other[key]);
+      const result = R.equals(one[key], other[key]);
+      return result;
     }
   }
   //return R.equals(cleanStep(one), cleanStep(other));
