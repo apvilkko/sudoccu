@@ -31,7 +31,7 @@ const sortSteps = R.sortWith([ascendRow, ascendCol]);
   )
 });*/
 
-const STEP_SECTIONS = ["solved", "eliminations", "cause"];
+const STEP_SECTIONS = ["solved", "eliminations"];
 
 const isEqualStep = (one, other) => {
   if (!one || !other) {
@@ -164,7 +164,9 @@ const solve = size => (boardToSolve, allowUnsolved) => {
   }
 
   if (!isSolved(board) && !allowUnsolved) {
-    throw new Error("unsolvable");
+    throw new Error(
+      "unsolvable: " + board.map(x => x.solvedValue || ".").join("")
+    );
   }
 
   return allSteps;

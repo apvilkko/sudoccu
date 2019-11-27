@@ -1,4 +1,5 @@
-import { solve } from "./solver";
+//import * as R from "ramda";
+import { solve /*applySteps*/ } from "./solver";
 import { init, atBoard, updateCandidates } from "../board/actions/board";
 import { newCell } from "../board/actions/cell";
 import { filterCandidates, NAKED_SINGLE } from "./strategies/common";
@@ -37,6 +38,17 @@ const TEST_SINGLES_COMPLEX = `1.4.9..68
 781923645
 495.6.823
 .6.854179
+`;
+
+const TEST_HIDDEN_SINGLE = `........2
+....954..
+..68.....
+.85.2.941
+...1.9738
+1.....256
+893.1....
+...9....4
+..76..3..
 `;
 
 const TEST_NAKED_PAIRS = `.8..9..3.
@@ -232,7 +244,7 @@ describe("solver", () => {
     it("solves naked pairs", () => {
       const data = TEST_NAKED_PAIRS;
       const board = init(size)(data);
-      const steps = solve(size)(board, true);
+      const steps = solve(size)(board);
       const matches = steps.filter(a => a.type === "nakedPair");
       expect(matches.length > 0).toBeTruthy();
 
@@ -260,10 +272,20 @@ describe("solver", () => {
       expect(steps.map(a => a.type)).toContain("pointingPair");
     });
 
+    it("solves hidden singles", () => {
+      const data = TEST_HIDDEN_SINGLE;
+      const board = init(size)(data);
+      const steps = solve(size)(board);
+      const formattedSteps = formatSteps(steps);
+      expect(formattedSteps).toContain("hiddenSingle: 6 at B8");
+      expect(formattedSteps).toContain("hiddenSingle: 5 at G4");
+      expect(formattedSteps).toContain("hiddenSingle: 5 at E5");
+    });
+
     it("solves pointing triples", () => {
       const data = TEST_POINTING_TRIPLE;
       const board = init(size)(data);
-      const steps = solve(size)(board, true);
+      const steps = solve(size)(board);
       const step = steps.filter(a => a.type === "pointingTriple");
       expect(step.length).toBe(1);
       expect(step[0].eliminations.length).toBe(1);
@@ -290,9 +312,10 @@ describe("solver", () => {
     it("solves x-wing", () => {
       const data = TEST_X_WING;
       const board = init(size)(data);
-      const steps = solve(size)(board, true);
+      const steps = solve(size)(board);
       const xwings = steps.filter(a => a.type === "x-wing");
       expect(xwings.length > 0).toBeTruthy();
+      expect(xwings[0].tuple).toEqual([7]);
     });
 
     it("solves x-wing, 2nd orientation", () => {
@@ -300,11 +323,8 @@ describe("solver", () => {
       const board = init(size)(data);
       const steps = solve(size)(board, true);
       const xwings = steps.filter(a => a.type === "x-wing");
-      /*console.log(xwings);
-      xwings.forEach(xwing => {
-        console.log(xwing.eliminations.map(x => x.eliminatedCandidates[0]));
-      });*/
       expect(xwings.length > 0).toBeTruthy();
+      expect(xwings[0].tuple).toEqual([2]);
     });
 
     it("solves hidden pairs", () => {
@@ -331,7 +351,7 @@ describe("solver", () => {
     it("solves hidden triples", () => {
       const data = TEST_HIDDEN_TRIPLES;
       const board = init(size)(data);
-      const steps = solve(size)(board, true);
+      const steps = solve(size)(board);
       const matches = steps.filter(a => a.type === "hiddenTriple");
       expect(matches.length > 0).toBeTruthy();
     });
@@ -343,7 +363,7 @@ describe("solver", () => {
       //console.log(formatSteps(steps));
       let result = board;
       // TODO
-      /* for (let i = 0; i < steps.length; ++i) {
+      /*for (let i = 0; i < steps.length; ++i) {
         const step = steps[i];
         const remainingSteps = steps.slice(i + 1);
         result = applySteps(size)(result)([step]);
@@ -363,7 +383,7 @@ describe("solver", () => {
           }
         }
         expect(remainingSteps).toEqual(newSteps);
-      } */
+      }*/
     });
   });
 });

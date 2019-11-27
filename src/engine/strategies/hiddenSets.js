@@ -17,7 +17,7 @@ import { getCombinations } from "../math";
 import { getCandidates } from "../../board/actions/cell";
 
 const hiddenSets = (degree, desiredType) => (board, size) => addStep => {
-  iterateBlocks(size)(board)((block, blockType, blockIndex) => {
+  iterateBlocks(size)(board)((block, blockType) => {
     /*console.log(
       "SDC block",
       blockType,
@@ -178,7 +178,18 @@ const hiddenSets = (degree, desiredType) => (board, size) => addStep => {
       if (desiredType === type) {
         const payload =
           degree === 1
-            ? { blockType, solved: candsForValue[0].candidates }
+            ? {
+                blockType,
+                solved:
+                  desiredType === HIDDEN
+                    ? [
+                        {
+                          ...candsForValue[0].candidates[0],
+                          candidates: [candsForValue[0].value]
+                        }
+                      ]
+                    : candsForValue[0].candidates
+              }
             : {
                 blockType,
                 eliminations: possibleEliminations,
