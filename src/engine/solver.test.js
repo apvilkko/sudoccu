@@ -4,153 +4,11 @@ import { init, atBoard, updateCandidates } from "../board/actions/board";
 import { newCell } from "../board/actions/cell";
 import { filterCandidates, NAKED_SINGLE } from "./strategies/common";
 import formatSteps from "../formatSteps";
+import testcases from "../testcases";
 
 const size = 9;
 
-const TEST_SOLVED = `629543817
-158762493
-734891625
-876219534
-412635789
-395487261
-241976358
-583124976
-967358142
-`;
-
-const TEST_SINGLES_SIMPLE = `62.543817
-158762493
-734891625
-8762195.4
-412635789
-395487261
-241976.58
-583124976
-967358142
-`;
-
-const TEST_SINGLES_COMPLEX = `1.4.9..68
-956.18.34
-..84.6951
-51.....86
-8..6...12
-642.8..97
-781923645
-495.6.823
-.6.854179
-`;
-
-const TEST_HIDDEN_SINGLE = `........2
-....954..
-..68.....
-.85.2.941
-...1.9738
-1.....256
-893.1....
-...9....4
-..76..3..
-`;
-
-const TEST_NAKED_PAIRS = `.8..9..3.
-.3.....69
-9.2.63158
-.2.8.459.
-8519.7.46
-3946.587.
-563.4.987
-2......15
-.1..5..2.
-`;
-
-const TEST_NAKED_SINGLES_AND_PAIRS = `41.928...
-.56.1.82.
-283.75149
-56...7..2
-8....961.
-..42.175.
-64985.271
-7.519.486
-..87.639.
-`;
-
-const TEST_POINTING_PAIRS = `.32..61..
-41.......
-...9.1...
-5...9...4
-.6.....71
-3...2...5
-...5.8...
-......519
-.57..986.
-`;
-
-const TEST_X_WING = `1.....569
-492.561.8
-.561.924.
-..964.8.1
-.64.1....
-218.356.4
-.4.5...16
-9.5.614.2
-621.....5
-`;
-
-const TEST_X_WING_2 = `.......94
-76.91..5.
-.9...2.81
-.7..5..1.
-...7.9...
-.8..31.67
-24.1...7.
-.1..9..45
-9.....1..
-`;
-
-const TEST_HIDDEN_PAIRS = `72.4.8.3.
-.8.....47
-4.1.768.2
-81.739...
-...851...
-...264.8.
-2.968.413
-34......8
-168943275
-`;
-
-const TEST_HIDDEN_TRIPLES = `.....1.3.
-231.9....
-.65..31..
-6789243..
-1.3.5...6
-...1367..
-..936.57.
-..6.19843
-3........
-`;
-
-const TEST_POINTING_TRIPLE = `93..5....
-2..63..95
-856..2...
-..318.57.
-..5.2.98.
-.8...5...
-...8..159
-5.821...4
-...56...8
-`;
-
-const TEST_BOX_LINE_REDUCTION = `.16..78.3
-.9.8.....
-87...1.6.
-.48...3..
-65...9.82
-.39...65.
-.6.9...2.
-.8...2936
-9246..51.
-`;
-
-const blockOf = data => {
+const blockOf = (data) => {
   return data.split(" ").map((spec, i) => {
     const cell = newCell(0, i);
     let value = spec;
@@ -177,7 +35,7 @@ describe("solver", () => {
       const values = Object.values(candidates);
       expect(values.length).toEqual(2);
       const collected = [];
-      values.forEach(value => {
+      values.forEach((value) => {
         expect(value.length).toEqual(1);
         collected.push(value[0].value);
       });
@@ -197,7 +55,7 @@ describe("solver", () => {
 
   describe("updateCandidates", () => {
     it("sets the correct initial state", () => {
-      const data = TEST_NAKED_SINGLES_AND_PAIRS;
+      const data = testcases.TEST_NAKED_SINGLES_AND_PAIRS;
       const board = init(size)(data);
       const result = updateCandidates(size)(board)();
       expect(atBoard(size)(result)(2, 0).candidates).toEqual([7]);
@@ -209,18 +67,18 @@ describe("solver", () => {
 
   describe("solve", () => {
     it("return 0 steps for solved puzzle", () => {
-      const data = TEST_SOLVED;
+      const data = testcases.TEST_SOLVED;
       const board = init(size)(data);
       expect(solve(size)(board)).toEqual([]);
       expect(atBoard(size)(board)(0, 0).solvedValue !== null).toBeTruthy();
     });
 
     it("solves naked singles, simple case", () => {
-      const data = TEST_SINGLES_SIMPLE;
+      const data = testcases.TEST_SINGLES_SIMPLE;
       const board = init(size)(data);
       const steps = solve(size)(board);
-      const coords = steps.map(a => ({ x: a.solved[0].x, y: a.solved[0].y }));
-      const types = steps.map(a => a.type);
+      const coords = steps.map((a) => ({ x: a.solved[0].x, y: a.solved[0].y }));
+      const types = steps.map((a) => a.type);
       expect(types).toEqual(["nakedSingle", "nakedSingle", "nakedSingle"]);
       expect(coords.length).toEqual(3);
       expect(steps[0].solved[0].candidates).toEqual([9]);
@@ -230,22 +88,22 @@ describe("solver", () => {
     });
 
     it("solves naked singles, complex case", () => {
-      const data = TEST_SINGLES_COMPLEX;
+      const data = testcases.TEST_SINGLES_COMPLEX;
       const board = init(size)(data);
       const steps = solve(size)(board);
       const coords = steps
-        .filter(a => a.type === NAKED_SINGLE)
-        .map(a => ({ x: a.solved[0].x, y: a.solved[0].y }));
-      const types = steps.map(a => a.type);
+        .filter((a) => a.type === NAKED_SINGLE)
+        .map((a) => ({ x: a.solved[0].x, y: a.solved[0].y }));
+      const types = steps.map((a) => a.type);
       expect(types).toContain("nakedSingle");
       expect(coords).toContainEqual({ x: 2, y: 8 });
     });
 
     it("solves naked pairs", () => {
-      const data = TEST_NAKED_PAIRS;
+      const data = testcases.TEST_NAKED_PAIRS;
       const board = init(size)(data);
       const steps = solve(size)(board);
-      const matches = steps.filter(a => a.type === "nakedPair");
+      const matches = steps.filter((a) => a.type === "nakedPair");
       expect(matches.length > 0).toBeTruthy();
 
       expect(matches[0].tuple).toEqual([1, 2]);
@@ -266,14 +124,14 @@ describe("solver", () => {
     });
 
     it("solves pointing pairs", () => {
-      const data = TEST_POINTING_PAIRS;
+      const data = testcases.TEST_POINTING_PAIRS;
       const board = init(size)(data);
       const steps = solve(size)(board, true);
-      expect(steps.map(a => a.type)).toContain("pointingPair");
+      expect(steps.map((a) => a.type)).toContain("pointingPair");
     });
 
     it("solves hidden singles", () => {
-      const data = TEST_HIDDEN_SINGLE;
+      const data = testcases.TEST_HIDDEN_SINGLE;
       const board = init(size)(data);
       const steps = solve(size)(board);
       const formattedSteps = formatSteps(steps);
@@ -283,25 +141,25 @@ describe("solver", () => {
     });
 
     it("solves pointing triples", () => {
-      const data = TEST_POINTING_TRIPLE;
+      const data = testcases.TEST_POINTING_TRIPLE;
       const board = init(size)(data);
       const steps = solve(size)(board);
-      const step = steps.filter(a => a.type === "pointingTriple");
+      const step = steps.filter((a) => a.type === "pointingTriple");
       expect(step.length).toBe(1);
       expect(step[0].eliminations.length).toBe(1);
       expect(step[0].eliminations[0]).toEqual({
         eliminatedCandidates: [3],
         x: 5,
-        y: 4
+        y: 4,
       });
     });
 
     it("solves box line reduction", () => {
-      const data = TEST_BOX_LINE_REDUCTION;
+      const data = testcases.TEST_BOX_LINE_REDUCTION;
       const board = init(size)(data);
       const steps = solve(size)(board, true);
       const step = steps.find(
-        a =>
+        (a) =>
           a.type === "boxLineReduction" &&
           a.tuple[0] === 2 &&
           a.eliminations.length === 3
@@ -310,28 +168,28 @@ describe("solver", () => {
     });
 
     it("solves x-wing", () => {
-      const data = TEST_X_WING;
+      const data = testcases.TEST_X_WING;
       const board = init(size)(data);
       const steps = solve(size)(board);
-      const xwings = steps.filter(a => a.type === "x-wing");
+      const xwings = steps.filter((a) => a.type === "x-wing");
       expect(xwings.length > 0).toBeTruthy();
       expect(xwings[0].tuple).toEqual([7]);
     });
 
     it("solves x-wing, 2nd orientation", () => {
-      const data = TEST_X_WING_2;
+      const data = testcases.TEST_X_WING_2;
       const board = init(size)(data);
       const steps = solve(size)(board, true);
-      const xwings = steps.filter(a => a.type === "x-wing");
+      const xwings = steps.filter((a) => a.type === "x-wing");
       expect(xwings.length > 0).toBeTruthy();
       expect(xwings[0].tuple).toEqual([2]);
     });
 
     it("solves hidden pairs", () => {
-      const data = TEST_HIDDEN_PAIRS;
+      const data = testcases.TEST_HIDDEN_PAIRS;
       const board = init(size)(data);
       const steps = solve(size)(board, true);
-      const matches = steps.filter(a => a.type === "hiddenPair");
+      const matches = steps.filter((a) => a.type === "hiddenPair");
       expect(matches.length > 0).toBeTruthy();
 
       expect(matches[0].tuple).toEqual([2, 4]);
@@ -344,20 +202,20 @@ describe("solver", () => {
       expect(matches[0].eliminations[1].eliminatedCandidates).toEqual([
         3,
         6,
-        7
+        7,
       ]);
     });
 
     it("solves hidden triples", () => {
-      const data = TEST_HIDDEN_TRIPLES;
+      const data = testcases.TEST_HIDDEN_TRIPLES;
       const board = init(size)(data);
       const steps = solve(size)(board);
-      const matches = steps.filter(a => a.type === "hiddenTriple");
+      const matches = steps.filter((a) => a.type === "hiddenTriple");
       expect(matches.length > 0).toBeTruthy();
     });
 
     it("creates a solution that does not change during applying steps", () => {
-      const data = TEST_NAKED_SINGLES_AND_PAIRS;
+      const data = testcases.TEST_NAKED_SINGLES_AND_PAIRS;
       const board = init(size)(data);
       const steps = solve(size)(board);
       //console.log(formatSteps(steps));
