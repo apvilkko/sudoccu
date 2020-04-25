@@ -12,24 +12,47 @@ const EMPTY = '.'
 const board = (data = '') => {
   return {
     data: data.replace(/\s+/g, '').replace(/[^\d.]/, EMPTY),
-    candidates: Array.from({ length: SIZE * SIZE * SIZE }).map(() => EMPTY),
+    candidates: Array.from({ length: SIZE * SIZE }).map(() => null),
   }
 }
 
-const sum = (a, c) => a + c
+const sumFns = {
+  sum: (a, c) => a + c,
+  arrSum: (a, c) => (a || []).concat(c || []),
+}
 
 const boxStartIndex = (i) => (Math.floor(i / DIM) * SIZE + (i % DIM)) * DIM
 
+const key = (cands) => (cands ? 'candidates' : 'data')
+const fn = (cands) => (cands ? 'slice' : 'substring')
+const atFn = (cands) => (cands ? 'get' : 'charAt')
+const sumFn = (cands) => (cands ? 'arrSum' : 'sum')
+
+Array.prototype.get = function (i) {
+  return this[i]
+}
+
+const DIMS = Array.from({ length: DIM }).map((_, i) => i)
+
 const get = {
-  [ROW]: (b, i) => b.data.substring(i * SIZE, i * SIZE + SIZE),
-  [COL]: (b, i) => INDEXES.map((x) => b.data.charAt(x * SIZE + i)).reduce(sum),
-  [BOX]: (b, i) => {
+  [ROW]: (b, i, cands) => {
+    const index = i * SIZE
+    return b[key(cands)][fn(cands)](index, index + SIZE)
+  },
+  [COL]: (b, i, cands) => {
+    const sumFunc = sumFns[sumFn(cands)]
+    const data = key(cands)
+    const at = atFn(cands)
+    return INDEXES.map((x) => b[data][at](x * SIZE + i)).reduce(sumFunc)
+  },
+  [BOX]: (b, i, cands) => {
     const start = boxStartIndex(i)
-    return (
-      b.data.substring(start, start + DIM) +
-      b.data.substring(start + SIZE, start + SIZE + DIM) +
-      b.data.substring(start + 2 * SIZE, start + 2 * SIZE + DIM)
-    )
+    const sumFunc = sumFns[sumFn(cands)]
+    const data = key(cands)
+    const func = fn(cands)
+    return DIMS.map((x) =>
+      b[data][func](start + x * SIZE, start + x * SIZE + DIM)
+    ).reduce(sumFunc)
   },
 }
 

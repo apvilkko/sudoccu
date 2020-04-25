@@ -7,6 +7,8 @@ const cv = (coords, value) => (x) =>
 
 const stepN = (steps, coords, value) => steps.filter(cv(coords, value)).length
 
+const typeIs = (type) => (x) => x.type === type
+
 describe('toRealIndex', () => {
   it('works', () => {
     expect(toRealIndex(3, ROW, 0)).toEqual(3)
@@ -24,13 +26,13 @@ describe('toRealIndex', () => {
 describe('solve', () => {
   it('does nothing with solved board', () => {
     const data = testcases.TEST_SOLVED
-    const steps = solve(board(data))
+    const { steps } = solve(board(data))
     expect(steps).toEqual([])
   })
 
   it('solves naked singles, simple', () => {
     const data = testcases.TEST_SINGLES_SIMPLE
-    const steps = solve(board(data))
+    const { steps } = solve(board(data))
     //console.log('steps', steps)
     expect(steps.length).toEqual(3)
     expect(stepN(steps, [2, 0], 9)).toEqual(1)
@@ -40,7 +42,10 @@ describe('solve', () => {
 
   it('solves hidden singles', () => {
     const data = testcases.TEST_HIDDEN_SINGLE
-    const steps = solve(board(data))
-    console.log('steps', steps)
+    const { steps } = solve(board(data))
+    //console.log('steps', steps)
+    expect(stepN(steps, [7, 1], 6)).toEqual(1)
+    expect(stepN(steps, [4, 4], 5)).toEqual(1)
+    expect(stepN(steps, [2, 1], 8)).toEqual(1)
   })
 })

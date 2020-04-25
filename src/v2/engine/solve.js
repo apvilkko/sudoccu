@@ -52,6 +52,7 @@ const toRealIndex = (indexWithinGroup, groupType, groupIndex) => {
 const updateCandidates = (board) => {
   for (let i = 0; i < board.data.length; ++i) {
     const value = board.data[i]
+    let candidates = null
     if (value === EMPTY) {
       const rowIndex = Math.floor(i / SIZE)
       const colIndex = i % SIZE
@@ -62,10 +63,11 @@ const updateCandidates = (board) => {
         Math.floor(rowIndex / DIM) * DIM + Math.floor(colIndex / DIM)
       )
       const combo = row + col + box
-      const cands = CHOICES.filter((x) => combo.indexOf(x) === -1)
-      console.log(cands)
-      // TODO set cands to model
+      candidates = CHOICES.filter((x) => combo.indexOf(x) === -1).map((x) =>
+        parseInt(x)
+      )
     }
+    board.candidates[i] = candidates
   }
 }
 
@@ -75,41 +77,92 @@ const toCoords = (index) => {
 
 const nakedSingle = (board) => {
   const steps = []
-  for (let g = 0; g < GROUPS.length; ++g) {
-    for (let i = 0; i < SIZE; ++i) {
-      const group = get[GROUPS[g]](board, i)
-      const candidates = getCandidates(group)
-      if (candidates.length === 1) {
-        steps.push({
-          type: 'nakedSingle',
-          value: candidates[0].candidates[0],
-          index: candidates[0].index,
-          groupType: GROUPS[g],
-          groupIndex: i,
-        })
-      }
+  for (let i = 0; i < board.candidates.length; ++i) {
+    if (board.candidates[i] && board.candidates[i].length === 1) {
+      steps.push({
+        type: 'nakedSingle',
+        value: board.candidates[i][0],
+        realIndex: i,
+      })
     }
   }
   return steps
 }
 
+const getAmounts = (candidates) => {
+  const ret = {}
+  for (let i = 0; i < candidates.length; ++i) {
+    if (candidates[i]) {
+      for (let j = 0; j < candidates[i].length; ++j) {
+        const val = candidates[i][j]
+        if (!ret[val]) {
+          ret[val] = []
+        }
+        ret[val].push(i)
+      }
+    }
+  }
+  return ret
+}
+
 const hiddenSingle = (board) => {
   const steps = []
+  for (let g = 0; g < GROUPS.length; ++g) {
+    for (let i = 0; i < SIZE; ++i) {
+      const candidates = get[GROUPS[g]](board, i, true)
+      const amounts = getAmounts(candidates)
+      Object.keys(amounts).forEach((key) => {
+        const indexes = amounts[key]
+        if (indexes.length === 1) {
+          const value = parseInt(key)
+          steps.push({
+            type: 'hiddenSingle',
+            value,
+            groupIndex: i,
+            groupType: g,
+            index: indexes[0],
+          })
+        }
+      })
+    }
+  }
   return steps
 }
 
 const addCoords = (step) => {
-  const { index, groupType, groupIndex } = step
-  const realIndex = toRealIndex(index, groupType, groupIndex)
-  step.realIndex = realIndex
-  step.coords = toCoords(realIndex)
-  return step
+  let realIndex = step.realIndex
+  if (!realIndex && realIndex !== 0) {
+    const { index, groupType, groupIndex } = step
+    realIndex = toRealIndex(index, groupType, groupIndex)
+  }
+  const coords = toCoords(realIndex)
+  //console.log('addCoords', step, coords, realIndex)
+  return { ...step, coords, realIndex }
 }
 
 const ALL_STRATEGIES = [nakedSingle, hiddenSingle]
 
+const setValueToBoard = (board, realIndex, value) => {
+  board.data =
+    board.data.substring(0, realIndex) +
+    value +
+    board.data.substring(realIndex + 1)
+}
+
+const applyStep = (board, step) => {
+  if (step.type === 'hiddenSingle' || step.type === 'nakedSingle') {
+    let realIndex = step.realIndex
+    if (!realIndex) {
+      const withCoords = addCoords(step)
+      setValueToBoard(board, withCoords.realIndex, step.value)
+    }
+  }
+}
+
 const applySteps = (board, steps) => {
-  return board
+  for (let i = 0; i < steps.length; ++i) {
+    applyStep(board, steps[i])
+  }
 }
 
 const solvesSame = (a, b) => {
@@ -145,17 +198,31 @@ const removeDuplicateSteps = (steps) => {
 
 const MAX_ITERATIONS = 1000
 
+const finalize = (status, steps) => {
+  return {
+    status,
+    steps: removeDuplicateSteps(steps.map(addCoords)),
+  }
+}
+
 const solve = (board) => {
   let steps = []
+  let status = null
   if (isSolved(board)) {
-    console.log('Already solved')
-    return steps
+    status = 'Already solved!'
+    console.log(status)
+    return finalize(status, steps)
   }
 
   let stratSteps
   let i = 0
   let iterations = 0
   while (i < ALL_STRATEGIES.length && iterations < MAX_ITERATIONS) {
+    if (isSolved(board)) {
+      console.log('Solved!')
+      return finalize(status, steps)
+    }
+
     const strategy = ALL_STRATEGIES[i]
     updateCandidates(board)
     stratSteps = strategy(board)
@@ -170,12 +237,11 @@ const solve = (board) => {
   }
 
   if (i === ALL_STRATEGIES.length || iterations === MAX_ITERATIONS) {
-    console.log('Solver exhausted', i, iterations)
+    status = `Solver exhausted at iteration ${iterations}.`
+    console.log(status)
   }
 
-  steps = removeDuplicateSteps(steps.map(addCoords))
-
-  return steps
+  return finalize(status, steps)
 }
 
 export { solve as default, toRealIndex }
