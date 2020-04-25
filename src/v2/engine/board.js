@@ -34,6 +34,20 @@ Array.prototype.get = function (i) {
 
 const DIMS = Array.from({ length: DIM }).map((_, i) => i)
 
+const realIndexTo = (key, i) => {
+  switch (key) {
+    case COL:
+      return i % SIZE
+    case ROW:
+      return Math.floor(i / SIZE)
+    default:
+      return (
+        Math.floor(Math.floor(i / SIZE) / DIM) * DIM +
+        Math.floor((i % SIZE) / DIM)
+      )
+  }
+}
+
 const get = {
   [ROW]: (b, i, cands) => {
     const index = i * SIZE
@@ -68,4 +82,5 @@ export {
   EMPTY,
   boxStartIndex,
   CHOICES,
+  realIndexTo,
 }

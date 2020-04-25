@@ -1,5 +1,5 @@
 import testcases from '../../testcases'
-import solve, { toRealIndex } from './solve'
+import solve, { toRealIndex, getCandidatesAt } from './solve'
 import board, { ROW, COL, BOX } from './board'
 
 const cv = (coords, value) => (x) =>
@@ -47,5 +47,11 @@ describe('solve', () => {
     expect(stepN(steps, [7, 1], 6)).toEqual(1)
     expect(stepN(steps, [4, 4], 5)).toEqual(1)
     expect(stepN(steps, [2, 1], 8)).toEqual(1)
+  })
+})
+
+describe('getCandidatesAt', () => {
+  it('works', () => {
+    expect(getCandidatesAt('1234567894', 10)).toEqual([5, 6, 7, 8, 9])
   })
 })

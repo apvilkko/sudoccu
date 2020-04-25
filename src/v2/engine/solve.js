@@ -9,34 +9,10 @@ import {
   boxStartIndex,
   EMPTY,
   CHOICES,
+  realIndexTo,
 } from './board'
 
 const isSolved = (board) => board.data.indexOf('.') === -1
-
-const getCandidates = (group) => {
-  const present = {}
-  const empties = []
-  for (let i = 0; i < SIZE; ++i) {
-    if (group[i] !== EMPTY) {
-      present[group[i]] = true
-    } else {
-      empties.push(i)
-    }
-  }
-  const candidates = []
-  for (let e = 0; e < empties.length; ++e) {
-    const cands = []
-    for (let n = 1; n < SIZE + 1; ++n) {
-      if (!present[n]) {
-        cands.push(n)
-      }
-    }
-    if (cands.length) {
-      candidates.push({ index: empties[e], candidates: cands })
-    }
-  }
-  return candidates
-}
 
 const toRealIndex = (indexWithinGroup, groupType, groupIndex) => {
   if (groupType === ROW) {
@@ -49,30 +25,35 @@ const toRealIndex = (indexWithinGroup, groupType, groupIndex) => {
   return start + addLines * SIZE + (indexWithinGroup % DIM)
 }
 
+const getCandidatesAt = (data, i) => {
+  const value = data[i] || EMPTY
+  const board = { data }
+  let candidates = null
+  if (value === EMPTY) {
+    const rowIndex = Math.floor(i / SIZE)
+    const colIndex = i % SIZE
+    const row = get[ROW](board, rowIndex)
+    const col = get[COL](board, colIndex)
+    const box = get[BOX](
+      board,
+      Math.floor(rowIndex / DIM) * DIM + Math.floor(colIndex / DIM)
+    )
+    const combo = row + col + box
+    candidates = CHOICES.filter((x) => combo.indexOf(x) === -1).map((x) =>
+      parseInt(x)
+    )
+  }
+  return candidates
+}
+
 const updateCandidates = (board) => {
   for (let i = 0; i < board.data.length; ++i) {
-    const value = board.data[i]
-    let candidates = null
-    if (value === EMPTY) {
-      const rowIndex = Math.floor(i / SIZE)
-      const colIndex = i % SIZE
-      const row = get[ROW](board, rowIndex)
-      const col = get[COL](board, colIndex)
-      const box = get[BOX](
-        board,
-        Math.floor(rowIndex / DIM) * DIM + Math.floor(colIndex / DIM)
-      )
-      const combo = row + col + box
-      candidates = CHOICES.filter((x) => combo.indexOf(x) === -1).map((x) =>
-        parseInt(x)
-      )
-    }
-    board.candidates[i] = candidates
+    board.candidates[i] = getCandidatesAt(board.data, i)
   }
 }
 
 const toCoords = (index) => {
-  return [index % SIZE, Math.floor(index / SIZE)]
+  return [realIndexTo(COL, index), realIndexTo(ROW, index)]
 }
 
 const nakedSingle = (board) => {
@@ -244,4 +225,4 @@ const solve = (board) => {
   return finalize(status, steps)
 }
 
-export { solve as default, toRealIndex }
+export { solve as default, toRealIndex, getCandidatesAt }
