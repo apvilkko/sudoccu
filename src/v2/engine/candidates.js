@@ -1,19 +1,22 @@
-import { EMPTY, SIZE, ROW, get, COL, BOX, CHOICES, DIM } from './board'
+import { EMPTY, ROW, get, COL, BOX, CHOICES, realIndexTo } from './board'
+
+const sees = (data, i) => {
+  const rowIndex = realIndexTo(ROW, i)
+  const colIndex = realIndexTo(COL, i)
+  const boxIndex = realIndexTo(BOX, i)
+  const board = { data }
+  const row = get[ROW](board, rowIndex)
+  const col = get[COL](board, colIndex)
+  const box = get[BOX](board, boxIndex)
+  const combo = row + col + box
+  return combo
+}
 
 const getCandidatesAt = (data, i) => {
   const value = data[i] || EMPTY
-  const board = { data }
   let candidates = null
   if (value === EMPTY) {
-    const rowIndex = Math.floor(i / SIZE)
-    const colIndex = i % SIZE
-    const row = get[ROW](board, rowIndex)
-    const col = get[COL](board, colIndex)
-    const box = get[BOX](
-      board,
-      Math.floor(rowIndex / DIM) * DIM + Math.floor(colIndex / DIM)
-    )
-    const combo = row + col + box
+    const combo = sees(data, i)
     candidates = CHOICES.filter((x) => combo.indexOf(x) === -1).map((x) =>
       parseInt(x)
     )
@@ -21,9 +24,25 @@ const getCandidatesAt = (data, i) => {
   return candidates
 }
 
-const updateCandidates = (board) => {
-  for (let i = 0; i < board.data.length; ++i) {
-    board.candidates[i] = getCandidatesAt(board.data, i)
+const updateCandidates = (board, initial = false) => {
+  if (initial) {
+    for (let i = 0; i < board.data.length; ++i) {
+      board.candidates[i] = getCandidatesAt(board.data, i)
+    }
+  } else {
+    for (let i = 0; i < board.data.length; ++i) {
+      if (board.data[i] !== EMPTY) {
+        board.candidates[i] = null
+      } else {
+        const combo = sees(board.data, i)
+        const solved = CHOICES.filter((x) => combo.indexOf(x) > -1).map((x) =>
+          parseInt(x)
+        )
+        board.candidates[i] = board.candidates[i].filter(
+          (x) => !solved.includes(x)
+        )
+      }
+    }
   }
 }
 

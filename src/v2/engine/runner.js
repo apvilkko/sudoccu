@@ -1,3 +1,6 @@
-import { generatePuzzle } from './generate'
+import testcases from '../../testcases'
+import solve from './solve'
+import board from './board'
 
-generatePuzzle()
+const data = testcases.TEST_NAKED_PAIRS
+const { steps } = solve(board(data))

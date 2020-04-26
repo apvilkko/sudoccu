@@ -18,9 +18,16 @@ const board = (data = '') => {
   }
 }
 
+const toArray = (a) => (a === null ? a : Array.isArray(a) ? a : [a])
+
 const sumFns = {
   sum: (a, c) => a + c,
   arrSum: (a, c) => (a || []).concat(c || []),
+  arrPush: (a, c) => {
+    const arr = a || []
+    arr.push(toArray(c))
+    return arr
+  },
 }
 
 const boxStartIndex = (i) => (Math.floor(i / DIM) * SIZE + (i % DIM)) * DIM
@@ -56,10 +63,14 @@ const get = {
     return b[key(cands)][fn(cands)](index, index + SIZE)
   },
   [COL]: (b, i, cands) => {
-    const sumFunc = sumFns[sumFn(cands)]
+    const sumFunc = cands ? sumFns.arrPush : sumFns[sumFn(cands)]
+    const initial = cands ? [] : ''
     const data = key(cands)
     const at = atFn(cands)
-    return INDEXES.map((x) => b[data][at](x * SIZE + i)).reduce(sumFunc)
+    return INDEXES.map((x) => b[data][at](x * SIZE + i)).reduce(
+      sumFunc,
+      initial
+    )
   },
   [BOX]: (b, i, cands) => {
     const start = boxStartIndex(i)
@@ -90,4 +101,5 @@ export {
   realIndexTo,
   cleanData,
   replaceInData,
+  INDEXES,
 }

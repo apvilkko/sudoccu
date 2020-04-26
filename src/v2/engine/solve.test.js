@@ -4,11 +4,33 @@ import board, { ROW, COL, BOX } from './board'
 import { getCandidatesAt } from './candidates'
 import { isSolved } from './checks'
 import bruteSolve, { hasUniqueSolution } from './bruteSolve'
+import { print as formatPrint } from './format'
+
+const DEBUG = true
+const print = (x) => DEBUG && formatPrint(x)
 
 const cv = (coords, value) => (x) =>
-  x.coords[0] === coords[0] && x.coords[1] == coords[1] && x.value === value
+  x.items[0].coords[0] === coords[0] &&
+  x.items[0].coords[1] == coords[1] &&
+  x.tuple[0] === value
 
 const stepN = (steps, coords, value) => steps.filter(cv(coords, value)).length
+
+const typeIs = (type) => (x) => x.type === type
+
+const elimination = (matches, coords, value) => {
+  return (
+    matches.filter((x) =>
+      (x.eliminations || []).some((e) => {
+        return (
+          e.coords[0] === coords[0] &&
+          e.coords[1] === coords[1] &&
+          e.value === value
+        )
+      })
+    ).length > 0
+  )
+}
 
 describe('toRealIndex', () => {
   it('works', () => {
@@ -53,7 +75,7 @@ describe('solve', () => {
   it('solves naked singles, simple', () => {
     const data = testcases.TEST_SINGLES_SIMPLE
     const { steps } = solve(board(data))
-    //console.log('steps', steps)
+    //console.log('steps', JSON.stringify(steps, null, 2))
     expect(steps.length).toEqual(3)
     expect(stepN(steps, [2, 0], 9)).toEqual(1)
     expect(stepN(steps, [7, 3], 3)).toEqual(1)
@@ -63,10 +85,29 @@ describe('solve', () => {
   it('solves hidden singles', () => {
     const data = testcases.TEST_HIDDEN_SINGLE
     const { steps } = solve(board(data))
-    //console.log('steps', steps)
+    //print(steps)
     expect(stepN(steps, [7, 1], 6)).toEqual(1)
     expect(stepN(steps, [4, 4], 5)).toEqual(1)
     expect(stepN(steps, [2, 1], 8)).toEqual(1)
+  })
+
+  it('solves naked pairs', () => {
+    const data = testcases.TEST_NAKED_PAIRS
+    const { steps } = solve(board(data))
+    //print(steps)
+    const matches = steps.filter(typeIs('nakedPair'))
+    expect(elimination(matches, [3, 0], 7)).toEqual(true)
+    expect(elimination(matches, [3, 1], 7)).toEqual(true)
+    expect(elimination(matches, [3, 2], 7)).toEqual(true)
+
+    expect(elimination(matches, [5, 1], 1)).toEqual(true)
+    expect(elimination(matches, [5, 1], 2)).toEqual(true)
+
+    expect(elimination(matches, [2, 7], 7)).toEqual(true)
+    expect(elimination(matches, [2, 8], 7)).toEqual(true)
+
+    expect(elimination(matches, [4, 7], 3)).toEqual(true)
+    expect(elimination(matches, [4, 7], 7)).toEqual(true)
   })
 })
 

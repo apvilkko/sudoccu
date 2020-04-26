@@ -1,18 +1,12 @@
-import {
-  GROUPS,
-  SIZE,
-  DIM,
-  ROW,
-  COL,
-  get,
-  boxStartIndex,
-  EMPTY,
-  realIndexTo,
-  cleanData,
-} from './board'
-import { shuffle } from '../../engine/math'
-import { isSolved, isValidAt } from './checks'
-import { getCandidatesAt, updateCandidates } from './candidates'
+import { SIZE, DIM, ROW, COL, boxStartIndex, realIndexTo } from './board'
+import { isSolved } from './checks'
+import { updateCandidates } from './candidates'
+import nakedSingle from './strategies/nakedSingle'
+import hiddenSingle from './strategies/hiddenSingle'
+import nakedSet from './strategies/nakedSet'
+import { solvesSame } from './steps'
+
+const ALL_STRATEGIES = [nakedSingle, hiddenSingle, nakedSet(2)]
 
 const toRealIndex = (indexWithinGroup, groupType, groupIndex) => {
   if (groupType === ROW) {
@@ -29,72 +23,23 @@ const toCoords = (index) => {
   return [realIndexTo(COL, index), realIndexTo(ROW, index)]
 }
 
-const nakedSingle = (board) => {
-  const steps = []
-  for (let i = 0; i < board.candidates.length; ++i) {
-    if (board.candidates[i] && board.candidates[i].length === 1) {
-      steps.push({
-        type: 'nakedSingle',
-        value: board.candidates[i][0],
-        realIndex: i,
-      })
-    }
-  }
-  return steps
-}
-
-const getAmounts = (candidates) => {
-  const ret = {}
-  for (let i = 0; i < candidates.length; ++i) {
-    if (candidates[i]) {
-      for (let j = 0; j < candidates[i].length; ++j) {
-        const val = candidates[i][j]
-        if (!ret[val]) {
-          ret[val] = []
-        }
-        ret[val].push(i)
-      }
-    }
-  }
-  return ret
-}
-
-const hiddenSingle = (board) => {
-  const steps = []
-  for (let g = 0; g < GROUPS.length; ++g) {
-    for (let i = 0; i < SIZE; ++i) {
-      const candidates = get[GROUPS[g]](board, i, true)
-      const amounts = getAmounts(candidates)
-      Object.keys(amounts).forEach((key) => {
-        const indexes = amounts[key]
-        if (indexes.length === 1) {
-          const value = parseInt(key)
-          steps.push({
-            type: 'hiddenSingle',
-            value,
-            groupIndex: i,
-            groupType: g,
-            index: indexes[0],
-          })
-        }
-      })
-    }
-  }
-  return steps
-}
-
-const addCoords = (step) => {
-  let realIndex = step.realIndex
+const addItemCoords = (step) => (item) => {
+  let realIndex = item.realIndex
   if (!realIndex && realIndex !== 0) {
-    const { index, groupType, groupIndex } = step
+    const { groupType, groupIndex } = step
+    const { index } = item
     realIndex = toRealIndex(index, groupType, groupIndex)
   }
   const coords = toCoords(realIndex)
-  //console.log('addCoords', step, coords, realIndex)
-  return { ...step, coords, realIndex }
+  return { ...item, realIndex, coords }
 }
 
-const ALL_STRATEGIES = [nakedSingle, hiddenSingle]
+const addCoords = (step) => {
+  const adder = addItemCoords(step)
+  const items = (step.items || []).map(adder)
+  const eliminations = (step.eliminations || []).map(adder)
+  return { ...step, items, eliminations }
+}
 
 const setValueToBoard = (board, realIndex, value) => {
   board.data =
@@ -103,28 +48,33 @@ const setValueToBoard = (board, realIndex, value) => {
     board.data.substring(realIndex + 1)
 }
 
+const removeCandidate = (board, i, value) => {
+  board.candidates[i] = board.candidates[i].filter((x) => x !== value)
+}
+
 const applyStep = (board, step) => {
-  if (step.type === 'hiddenSingle' || step.type === 'nakedSingle') {
-    let realIndex = step.realIndex
+  step.items.forEach((item) => {
+    let realIndex = item.realIndex
+    let withCoords = item
     if (!realIndex) {
-      const withCoords = addCoords(step)
-      setValueToBoard(board, withCoords.realIndex, step.value)
+      withCoords = addItemCoords(step)(item)
     }
-  }
+    if (step.tuple.length === 1) {
+      setValueToBoard(board, withCoords.realIndex, step.tuple[0])
+    }
+    if (step.eliminations) {
+      step.eliminations.forEach((elimination) => {
+        const item = addItemCoords(step)(elimination)
+        removeCandidate(board, item.realIndex, item.value)
+      })
+    }
+  })
 }
 
 const applySteps = (board, steps) => {
   for (let i = 0; i < steps.length; ++i) {
     applyStep(board, steps[i])
   }
-}
-
-const solvesSame = (a, b) => {
-  return (
-    a.coords[0] === b.coords[0] &&
-    a.coords[1] === b.coords[1] &&
-    a.value === b.value
-  )
 }
 
 const removeDuplicateSteps = (steps) => {
@@ -171,6 +121,9 @@ const solve = (board) => {
   let stratSteps
   let i = 0
   let iterations = 0
+
+  updateCandidates(board, true)
+
   while (i < ALL_STRATEGIES.length && iterations < MAX_ITERATIONS) {
     if (isSolved(board)) {
       console.log('Solved!')
@@ -178,11 +131,13 @@ const solve = (board) => {
     }
 
     const strategy = ALL_STRATEGIES[i]
-    updateCandidates(board)
     stratSteps = strategy(board)
     if (stratSteps.length) {
       //console.log(stratSteps)
+      //console.log('before apply', board.data)
       applySteps(board, stratSteps)
+      //console.log('after apply', board.data)
+      updateCandidates(board)
       steps = steps.concat(stratSteps)
       i = 0
     }
