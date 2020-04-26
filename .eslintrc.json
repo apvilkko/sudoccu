@@ -3,7 +3,8 @@
   "plugins": ["prettier"],
   "rules": {
     "prettier/prettier": "error",
-    "no-constant-condition": 0
+    "no-constant-condition": 0,
+    "no-undef": "error"
   },
   "parser": "babel-eslint",
   "env": {

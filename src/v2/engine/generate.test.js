@@ -1,5 +1,6 @@
-import generate, { isValidNonet, isValidAt } from './generate'
+import generate, { generatePuzzle } from './generate'
 import { SIZE } from './board'
+import { isValidAt, isValidNonet, isSolved } from './checks'
 
 describe('generate', () => {
   it('generates valid board', () => {
@@ -41,4 +42,11 @@ describe('isValidNonet', () => {
     expect(isValidNonet('123456789')).toEqual(true)
     expect(isValidNonet('987123456')).toEqual(true)
   })
+})
+
+describe('generatePuzzle', () => {
+  const puzzle = generatePuzzle(10)
+  expect(isSolved(puzzle.board)).toEqual(true)
+  expect(isSolved(puzzle.playerBoard)).toEqual(false)
+  expect(puzzle.difficulty >= 10).toEqual(true)
 })

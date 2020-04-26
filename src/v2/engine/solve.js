@@ -4,15 +4,15 @@ import {
   DIM,
   ROW,
   COL,
-  BOX,
   get,
   boxStartIndex,
   EMPTY,
-  CHOICES,
   realIndexTo,
+  cleanData,
 } from './board'
-
-const isSolved = (board) => board.data.indexOf('.') === -1
+import { shuffle } from '../../engine/math'
+import { isSolved, isValidAt } from './checks'
+import { getCandidatesAt, updateCandidates } from './candidates'
 
 const toRealIndex = (indexWithinGroup, groupType, groupIndex) => {
   if (groupType === ROW) {
@@ -23,33 +23,6 @@ const toRealIndex = (indexWithinGroup, groupType, groupIndex) => {
   const start = boxStartIndex(groupIndex)
   const addLines = Math.floor(indexWithinGroup / DIM)
   return start + addLines * SIZE + (indexWithinGroup % DIM)
-}
-
-const getCandidatesAt = (data, i) => {
-  const value = data[i] || EMPTY
-  const board = { data }
-  let candidates = null
-  if (value === EMPTY) {
-    const rowIndex = Math.floor(i / SIZE)
-    const colIndex = i % SIZE
-    const row = get[ROW](board, rowIndex)
-    const col = get[COL](board, colIndex)
-    const box = get[BOX](
-      board,
-      Math.floor(rowIndex / DIM) * DIM + Math.floor(colIndex / DIM)
-    )
-    const combo = row + col + box
-    candidates = CHOICES.filter((x) => combo.indexOf(x) === -1).map((x) =>
-      parseInt(x)
-    )
-  }
-  return candidates
-}
-
-const updateCandidates = (board) => {
-  for (let i = 0; i < board.data.length; ++i) {
-    board.candidates[i] = getCandidatesAt(board.data, i)
-  }
 }
 
 const toCoords = (index) => {
@@ -225,4 +198,4 @@ const solve = (board) => {
   return finalize(status, steps)
 }
 
-export { solve as default, toRealIndex, getCandidatesAt }
+export { solve as default, toRealIndex }

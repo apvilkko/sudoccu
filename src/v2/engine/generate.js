@@ -1,44 +1,9 @@
-import { CHOICES, GROUPS, SIZE, get, EMPTY, realIndexTo, DIM } from './board'
-import { shuffle } from '../../engine/math'
-import { getCandidatesAt } from './solve'
-
-const isValidNonet = (nonet) => {
-  const acc = {}
-  for (let i = 0; i < nonet.length; ++i) {
-    if (nonet[i] !== EMPTY) {
-      if (!acc[nonet[i]]) {
-        acc[nonet[i]] = 0
-      }
-      if (++acc[nonet[i]] > 1) {
-        return false
-      }
-    }
-  }
-  return true
-}
-
-const isValidBoard = (board) => {
-  for (let g = 0; g < GROUPS.length; ++g) {
-    for (let i = 0; i < SIZE; ++i) {
-      const group = get[GROUPS[g]](board, i)
-      if (!isValidNonet(group)) {
-        return false
-      }
-    }
-  }
-  return true
-}
-
-const isValidAt = (board, realIndex) => {
-  for (let g = 0; g < GROUPS.length; ++g) {
-    const i = realIndexTo(g, realIndex)
-    const group = get[GROUPS[g]](board, i)
-    if (!isValidNonet(group)) {
-      return false
-    }
-  }
-  return true
-}
+import { CHOICES, SIZE, EMPTY, replaceInData } from './board'
+import { shuffle, sample } from '../../engine/math'
+import { getCandidatesAt } from './candidates'
+import { isValidAt } from './checks'
+import { hasUniqueSolution } from './bruteSolve'
+import board from './board'
 
 const randomRow = () => shuffle(CHOICES).join('')
 
@@ -46,7 +11,7 @@ const fill = (data, stats) => {
   if (data.length === SIZE * SIZE) {
     stats.time = new Date().getTime() - stats.startTime
     return {
-      result: true,
+      finished: true,
       data,
       stats,
     }
@@ -63,21 +28,71 @@ const fill = (data, stats) => {
       continue
     }
     const nextResult = fill(newData, stats)
-    if (nextResult.result) {
+    if (nextResult.finished) {
       return nextResult
     }
   }
-  return { result: false, data, stats }
+  return { finished: false, data, stats }
 }
 
 const generate = () => {
-  const startTime = new Date().getTime()
-  let startingRow = randomRow()
-  let data = startingRow
   const stats = {
-    startTime,
+    startTime: new Date().getTime(),
   }
-  return fill(data, stats)
+  return fill(randomRow(), stats)
 }
 
-export { generate as default, isValidNonet, isValidAt }
+const generateUniqueBoard = () => {
+  let data = ''
+  while (!hasUniqueSolution(data)) {
+    const result = generate()
+    data = result.data
+  }
+  return data
+}
+
+const emptyRegex = /\./g
+const calculateDifficulty = (data) => {
+  return (data.match(emptyRegex) || []).length
+}
+
+const getRemovalCandidates = (data) => {
+  return data
+    .split('')
+    .map((x, i) => [i, x])
+    .filter((x) => x[1] !== EMPTY)
+}
+
+const createSolvable = (data, desiredDifficulty) => {
+  const difficulty = calculateDifficulty(data)
+  if (difficulty >= desiredDifficulty) {
+    return { finished: true, data, difficulty }
+  }
+
+  const candidates = shuffle(getRemovalCandidates(data))
+
+  for (let c = 0; c < candidates.length; ++c) {
+    const [i, _] = candidates[c]
+    const newData = replaceInData(data, i, EMPTY)
+    if (hasUniqueSolution(newData, 10)) {
+      const nextResult = createSolvable(newData, desiredDifficulty)
+      if (nextResult.finished) {
+        return nextResult
+      }
+    }
+  }
+  return { data: null, difficulty: 0 }
+}
+
+const generatePuzzle = (desiredDifficulty = 20) => {
+  const data = generateUniqueBoard()
+  const b = board(data)
+  const puzzle = createSolvable(data, desiredDifficulty)
+  return {
+    board: b,
+    playerBoard: board(puzzle.data),
+    difficulty: puzzle.difficulty,
+  }
+}
+
+export { generate as default, generatePuzzle }

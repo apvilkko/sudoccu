@@ -9,9 +9,11 @@ const INDEXES = Array.from({ length: SIZE }).map((_, i) => i)
 const CHOICES = INDEXES.map((x) => x + 1 + '')
 const EMPTY = '.'
 
+const cleanData = (data) => data.replace(/\s+/g, '').replace(/[^\d.]/, EMPTY)
+
 const board = (data = '') => {
   return {
-    data: data.replace(/\s+/g, '').replace(/[^\d.]/, EMPTY),
+    data: cleanData(data),
     candidates: Array.from({ length: SIZE * SIZE }).map(() => null),
   }
 }
@@ -70,6 +72,9 @@ const get = {
   },
 }
 
+const replaceInData = (data, i, val) =>
+  data.substring(0, i) + val + data.substring(i + 1)
+
 export {
   board as default,
   get,
@@ -83,4 +88,6 @@ export {
   boxStartIndex,
   CHOICES,
   realIndexTo,
+  cleanData,
+  replaceInData,
 }

@@ -141,6 +141,17 @@ const TEST_BOX_LINE_REDUCTION = `.16..78.3
 9246..51.
 `
 
+const TEST_MULTIPLE_SOLUTIONS = `.8...9743
+.5...8.1.
+.1.......
+8....5...
+...8.4...
+...3....6
+.......7.
+.3.5...8.
+9724...5.
+`
+
 export default {
   TEST_BOX_LINE_REDUCTION,
   TEST_HIDDEN_PAIRS,
@@ -155,4 +166,5 @@ export default {
   TEST_SINGLES_COMPLEX,
   TEST_NAKED_PAIRS,
   TEST_NAKED_SINGLES_AND_PAIRS,
+  TEST_MULTIPLE_SOLUTIONS,
 }

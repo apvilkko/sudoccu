@@ -1,13 +1,14 @@
 import testcases from '../../testcases'
-import solve, { toRealIndex, getCandidatesAt } from './solve'
+import solve, { toRealIndex } from './solve'
 import board, { ROW, COL, BOX } from './board'
+import { getCandidatesAt } from './candidates'
+import { isSolved } from './checks'
+import bruteSolve, { hasUniqueSolution } from './bruteSolve'
 
 const cv = (coords, value) => (x) =>
   x.coords[0] === coords[0] && x.coords[1] == coords[1] && x.value === value
 
 const stepN = (steps, coords, value) => steps.filter(cv(coords, value)).length
-
-const typeIs = (type) => (x) => x.type === type
 
 describe('toRealIndex', () => {
   it('works', () => {
@@ -20,6 +21,25 @@ describe('toRealIndex', () => {
     expect(toRealIndex(4, BOX, 2)).toEqual(16)
     expect(toRealIndex(2, BOX, 3)).toEqual(29)
     expect(toRealIndex(8, BOX, 8)).toEqual(80)
+  })
+})
+
+describe('bruteSolve', () => {
+  it('solves valid puzzle', () => {
+    const data = testcases.TEST_HIDDEN_TRIPLES
+    const result = bruteSolve(data)
+    expect(isSolved({ data: result.data })).toEqual(true)
+  })
+})
+
+describe('hasUniqueSolution', () => {
+  it('works, positive', () => {
+    const data = testcases.TEST_POINTING_PAIRS
+    expect(hasUniqueSolution(data)).toEqual(true)
+  })
+  it('works, negative', () => {
+    const data = testcases.TEST_MULTIPLE_SOLUTIONS
+    expect(hasUniqueSolution(data)).toEqual(false)
   })
 })
 
