@@ -1,6 +1,6 @@
 import testcases from '../../testcases'
-import solve, { toRealIndex } from './solve'
-import board, { ROW, COL, BOX } from './board'
+import solve from './solve'
+import board, { ROW, COL, BOX, toRealIndex } from './board'
 import { getCandidatesAt } from './candidates'
 import { isSolved } from './checks'
 import bruteSolve, { hasUniqueSolution } from './bruteSolve'
@@ -14,22 +14,37 @@ const cv = (coords, value) => (x) =>
   x.items[0].coords[1] == coords[1] &&
   x.tuple[0] === value
 
-const stepN = (steps, coords, value) => steps.filter(cv(coords, value)).length
-
 const typeIs = (type) => (x) => x.type === type
 
-const elimination = (matches, coords, value) => {
-  return (
-    matches.filter((x) =>
-      (x.eliminations || []).some((e) => {
-        return (
-          e.coords[0] === coords[0] &&
-          e.coords[1] === coords[1] &&
-          e.value === value
-        )
-      })
-    ).length > 0
-  )
+const convertToCoords = (value) => {
+  if (Array.isArray(value)) {
+    return value
+  }
+  const parts = value.split('')
+  return [Number(parts[1]) - 1, parts[0].charCodeAt() - 0x41]
+}
+
+const stepN = (steps, coords, value) =>
+  steps.filter(cv(convertToCoords(coords), value)).length
+
+const elimination = (matches, coordsOrCell, value) => {
+  const coords = convertToCoords(coordsOrCell)
+  const values = Array.isArray(value) ? value : [value]
+  return values
+    .map((val) => {
+      return (
+        matches.filter((x) =>
+          (x.eliminations || []).some((e) => {
+            return (
+              e.coords[0] === coords[0] &&
+              e.coords[1] === coords[1] &&
+              e.value === val
+            )
+          })
+        ).length > 0
+      )
+    })
+    .every((x) => x === true)
 }
 
 describe('toRealIndex', () => {
@@ -86,9 +101,15 @@ describe('solve', () => {
     const data = testcases.TEST_HIDDEN_SINGLE
     const { steps } = solve(board(data))
     //print(steps)
-    expect(stepN(steps, [7, 1], 6)).toEqual(1)
-    expect(stepN(steps, [4, 4], 5)).toEqual(1)
-    expect(stepN(steps, [2, 1], 8)).toEqual(1)
+    expect(stepN(steps, 'B8', 6)).toEqual(1)
+    expect(stepN(steps, 'E5', 5)).toEqual(1)
+    expect(stepN(steps, 'F3', 9)).toEqual(1)
+    expect(stepN(steps, 'G4', 5)).toEqual(1)
+    expect(stepN(steps, 'A5', 6)).toEqual(1)
+    expect(stepN(steps, 'B3', 8)).toEqual(1)
+    expect(stepN(steps, 'B4', 2)).toEqual(1)
+    expect(stepN(steps, 'D6', 6)).toEqual(1)
+    expect(stepN(steps, 'F6', 8)).toEqual(1)
   })
 
   it('solves naked pairs', () => {
@@ -99,15 +120,115 @@ describe('solve', () => {
     expect(elimination(matches, [3, 0], 7)).toEqual(true)
     expect(elimination(matches, [3, 1], 7)).toEqual(true)
     expect(elimination(matches, [3, 2], 7)).toEqual(true)
-
-    expect(elimination(matches, [5, 1], 1)).toEqual(true)
-    expect(elimination(matches, [5, 1], 2)).toEqual(true)
-
+    expect(elimination(matches, [5, 1], [1, 2])).toEqual(true)
     expect(elimination(matches, [2, 7], 7)).toEqual(true)
     expect(elimination(matches, [2, 8], 7)).toEqual(true)
+    expect(elimination(matches, [4, 7], [3, 7])).toEqual(true)
+  })
 
-    expect(elimination(matches, [4, 7], 3)).toEqual(true)
-    expect(elimination(matches, [4, 7], 7)).toEqual(true)
+  it('solves hidden pairs', () => {
+    const data = testcases.TEST_HIDDEN_PAIRS
+    const { steps } = solve(board(data))
+    //print(steps)
+    const matches = steps.filter(typeIs('hiddenPair'))
+    expect(elimination(matches, 'D3', [5, 6])).toEqual(true)
+    expect(elimination(matches, 'E3', [3, 6, 7])).toEqual(true)
+    expect(elimination(matches, 'E2', 9)).toEqual(true)
+    expect(elimination(matches, 'E7', [6, 9])).toEqual(true)
+    expect(elimination(matches, 'F7', [1, 5, 9])).toEqual(true)
+  })
+
+  it('solves hidden triples', () => {
+    const data = testcases.TEST_HIDDEN_TRIPLES
+    const { steps } = solve(board(data))
+    //print(steps)
+    const matches = steps.filter(typeIs('hiddenTriple'))
+    expect(elimination(matches, 'A4', [4, 7, 8])).toEqual(true)
+    expect(elimination(matches, 'A7', [4, 9])).toEqual(true)
+    expect(elimination(matches, 'A9', [4, 7, 8, 9])).toEqual(true)
+  })
+
+  // TODO check later, needs x-wing
+  xit('solves hidden quads', () => {
+    const data = testcases.TEST_HIDDEN_QUADS
+    const { steps } = solve(board(data))
+    print(steps)
+    const matches = steps.filter(typeIs('hiddenQuad'))
+    expect(elimination(matches, 'G7', 6)).toEqual(true)
+    expect(elimination(matches, 'H7', 6)).toEqual(true)
+  })
+
+  it('solves naked triples', () => {
+    const data = testcases.TEST_NAKED_TRIPLES
+    const { steps } = solve(board(data))
+    //print(steps)
+    const matches = steps.filter(typeIs('nakedTriple'))
+
+    expect(elimination(matches, 'E1', [5, 9])).toEqual(true)
+    expect(elimination(matches, 'E3', [5, 9])).toEqual(true)
+    expect(elimination(matches, 'E7', [5, 8, 9])).toEqual(true)
+    expect(elimination(matches, 'E8', [5, 8, 9])).toEqual(true)
+  })
+
+  it('solves naked quads', () => {
+    const data = testcases.TEST_NAKED_QUADS
+    const { steps } = solve(board(data))
+    //print(steps)
+    const matches = steps.filter(typeIs('nakedQuad'))
+
+    expect(elimination(matches, 'A2', [1, 5])).toEqual(true)
+    expect(elimination(matches, 'A3', 5)).toEqual(true)
+    expect(elimination(matches, 'B3', [5, 6, 8])).toEqual(true)
+    expect(elimination(matches, 'C3', 6)).toEqual(true)
+  })
+
+  it('solves pointing pairs', () => {
+    const data = testcases.TEST_POINTING_PAIRS
+    const { steps } = solve(board(data))
+    //print(steps)
+    const matches = steps.filter(typeIs('pointingPair'))
+
+    expect(elimination(matches, 'B7', [2, 6])).toEqual(true)
+    expect(elimination(matches, 'B8', [2, 8])).toEqual(true)
+    expect(elimination(matches, 'B9', [2])).toEqual(true)
+
+    expect(elimination(matches, 'A8', [8])).toEqual(true)
+    expect(elimination(matches, 'C8', [8])).toEqual(true)
+
+    expect(elimination(matches, 'C2', [7])).toEqual(true)
+
+    expect(elimination(matches, 'C7', [6])).toEqual(true)
+
+    expect(elimination(matches, 'E1', [8])).toEqual(true)
+    expect(elimination(matches, 'E3', [8])).toEqual(true)
+
+    expect(elimination(matches, 'G2', [4])).toEqual(true)
+    expect(elimination(matches, 'G3', [1, 4])).toEqual(true)
+  })
+
+  it('solves pointing triples', () => {
+    const data = testcases.TEST_POINTING_TRIPLE
+    const { steps } = solve(board(data))
+    //print(steps)
+    const matches = steps.filter(typeIs('pointingTriple'))
+
+    expect(elimination(matches, 'E6', 3)).toEqual(true)
+  })
+
+  it('solves box line reduction', () => {
+    const data = testcases.TEST_BOX_LINE_REDUCTION
+    const { steps } = solve(board(data))
+    //print(steps)
+    const matches = steps.filter(typeIs('boxLineReduction'))
+
+    expect(elimination(matches, 'B5', 2)).toEqual(true)
+    expect(elimination(matches, 'C4', 2)).toEqual(true)
+    expect(elimination(matches, 'C5', 2)).toEqual(true)
+
+    expect(elimination(matches, 'B7', 4)).toEqual(true)
+    expect(elimination(matches, 'B9', 4)).toEqual(true)
+    expect(elimination(matches, 'C7', 4)).toEqual(true)
+    expect(elimination(matches, 'C9', 4)).toEqual(true)
   })
 })
 

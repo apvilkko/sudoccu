@@ -26,13 +26,18 @@ const hiddenSingle = (board) => {
         const indexes = amounts[key]
         if (indexes.length === 1) {
           const value = parseInt(key)
-          steps.push({
+          const step = {
             type: 'hiddenSingle',
             tuple: [value],
             groupIndex: i,
             groupType: g,
             items: [{ index: indexes[0] }],
-          })
+          }
+          if (value === 1) {
+            //console.log('hidden single found', step, candidates)
+          }
+
+          steps.push(step)
         }
       })
     }

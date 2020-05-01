@@ -86,6 +86,17 @@ const get = {
 const replaceInData = (data, i, val) =>
   data.substring(0, i) + val + data.substring(i + 1)
 
+const toRealIndex = (indexWithinGroup, groupType, groupIndex) => {
+  if (groupType === ROW) {
+    return groupIndex * SIZE + indexWithinGroup
+  } else if (groupType === COL) {
+    return indexWithinGroup * SIZE + groupIndex
+  }
+  const start = boxStartIndex(groupIndex)
+  const addLines = Math.floor(indexWithinGroup / DIM)
+  return start + addLines * SIZE + (indexWithinGroup % DIM)
+}
+
 export {
   board as default,
   get,
@@ -102,4 +113,5 @@ export {
   cleanData,
   replaceInData,
   INDEXES,
+  toRealIndex,
 }

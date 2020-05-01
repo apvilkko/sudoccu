@@ -1,23 +1,26 @@
-import { SIZE, DIM, ROW, COL, boxStartIndex, realIndexTo } from './board'
+import { ROW, COL, realIndexTo, toRealIndex } from './board'
 import { isSolved } from './checks'
 import { updateCandidates } from './candidates'
 import nakedSingle from './strategies/nakedSingle'
 import hiddenSingle from './strategies/hiddenSingle'
 import nakedSet from './strategies/nakedSet'
+import hiddenSet from './strategies/hiddenSet'
 import { solvesSame } from './steps'
+import pointingSets from './strategies/pointingSets'
+import boxLineReduction from './strategies/boxLineReduction'
 
-const ALL_STRATEGIES = [nakedSingle, hiddenSingle, nakedSet(2)]
-
-const toRealIndex = (indexWithinGroup, groupType, groupIndex) => {
-  if (groupType === ROW) {
-    return groupIndex * SIZE + indexWithinGroup
-  } else if (groupType === COL) {
-    return indexWithinGroup * SIZE + groupIndex
-  }
-  const start = boxStartIndex(groupIndex)
-  const addLines = Math.floor(indexWithinGroup / DIM)
-  return start + addLines * SIZE + (indexWithinGroup % DIM)
-}
+const ALL_STRATEGIES = [
+  nakedSingle,
+  hiddenSingle,
+  nakedSet(2),
+  hiddenSet(2),
+  nakedSet(3),
+  hiddenSet(3),
+  nakedSet(4),
+  hiddenSet(4),
+  pointingSets,
+  boxLineReduction,
+]
 
 const toCoords = (index) => {
   return [realIndexTo(COL, index), realIndexTo(ROW, index)]
@@ -49,7 +52,9 @@ const setValueToBoard = (board, realIndex, value) => {
 }
 
 const removeCandidate = (board, i, value) => {
-  board.candidates[i] = board.candidates[i].filter((x) => x !== value)
+  if (board.candidates[i]) {
+    board.candidates[i] = board.candidates[i].filter((x) => x !== value)
+  }
 }
 
 const applyStep = (board, step) => {
@@ -59,7 +64,7 @@ const applyStep = (board, step) => {
     if (!realIndex) {
       withCoords = addItemCoords(step)(item)
     }
-    if (step.tuple.length === 1) {
+    if (step.tuple.length === 1 && step.type.indexOf('ingle') > -1) {
       setValueToBoard(board, withCoords.realIndex, step.tuple[0])
     }
     if (step.eliminations) {
@@ -136,10 +141,12 @@ const solve = (board) => {
       //console.log(stratSteps)
       //console.log('before apply', board.data)
       applySteps(board, stratSteps)
-      //console.log('after apply', board.data)
+      //console.log('after apply', board.data, board.candidates)
       updateCandidates(board)
       steps = steps.concat(stratSteps)
-      i = 0
+      if (i > 0) {
+        i = 0
+      }
     }
     ++i
     ++iterations

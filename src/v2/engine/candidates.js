@@ -1,3 +1,4 @@
+import * as R from 'ramda'
 import { EMPTY, ROW, get, COL, BOX, CHOICES, realIndexTo } from './board'
 
 const sees = (data, i) => {
@@ -24,6 +25,14 @@ const getCandidatesAt = (data, i) => {
   return candidates
 }
 
+const getUniqueCandidates = (candidates) =>
+  R.uniq(
+    candidates
+      .flatMap((x) => x)
+      .filter((x) => x != null)
+      .sort()
+  )
+
 const updateCandidates = (board, initial = false) => {
   if (initial) {
     for (let i = 0; i < board.data.length; ++i) {
@@ -46,4 +55,4 @@ const updateCandidates = (board, initial = false) => {
   }
 }
 
-export { getCandidatesAt, updateCandidates }
+export { getCandidatesAt, updateCandidates, getUniqueCandidates }

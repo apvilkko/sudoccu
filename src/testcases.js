@@ -53,6 +53,39 @@ const TEST_NAKED_PAIRS = `.8..9..3.
 .1..5..2.
 `
 
+const TEST_NAKED_TRIPLES = `.7.4.8.29
+..2.....4
+854.2...7
+..83742..
+.2.......
+..32617..
+....93612
+2.....4.3
+13.642.7.
+`
+
+const TEST_NAKED_QUADS = `....3..86
+....2..4.
+.9..7852.
+371856294
+9..142375
+4..397618
+2..7.3859
+.392.5467
+7..9.4132
+`
+
+const TEST_HIDDEN_QUADS = `65..87.24
+...649.5.
+.4..25...
+57.438.61
+...5.1...
+31.9.2.85
+...89..1.
+...213...
+13.75..98
+`
+
 const TEST_NAKED_SINGLES_AND_PAIRS = `41.928...
 .56.1.82.
 283.75149
@@ -167,4 +200,7 @@ export default {
   TEST_NAKED_PAIRS,
   TEST_NAKED_SINGLES_AND_PAIRS,
   TEST_MULTIPLE_SOLUTIONS,
+  TEST_NAKED_TRIPLES,
+  TEST_NAKED_QUADS,
+  TEST_HIDDEN_QUADS,
 }
