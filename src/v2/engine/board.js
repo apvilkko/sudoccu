@@ -97,6 +97,29 @@ const toRealIndex = (indexWithinGroup, groupType, groupIndex) => {
   return start + addLines * SIZE + (indexWithinGroup % DIM)
 }
 
+const setValueToBoard = (board, realIndex, value) => {
+  board.data =
+    board.data.substring(0, realIndex) +
+    value +
+    board.data.substring(realIndex + 1)
+}
+
+const getRealIndex = (x, y) => y * SIZE + x
+
+const setValueToBoardXy = (board, x, y, value) =>
+  setValueToBoard(board, getRealIndex(x, y), value)
+
+const getBoardValue = (board, x, y) => board.data[getRealIndex(x, y)]
+
+const setCandidatesAt = (candidates, x, y, newCands) => {
+  const realIndex = getRealIndex(x, y)
+  return [
+    ...candidates.slice(0, realIndex),
+    newCands,
+    ...candidates.slice(realIndex + 1),
+  ]
+}
+
 export {
   board as default,
   get,
@@ -114,4 +137,8 @@ export {
   replaceInData,
   INDEXES,
   toRealIndex,
+  setValueToBoard,
+  setValueToBoardXy,
+  getBoardValue,
+  setCandidatesAt,
 }

@@ -1,4 +1,4 @@
-import { ROW, COL, realIndexTo, toRealIndex } from './board'
+import { ROW, COL, realIndexTo, toRealIndex, setValueToBoard } from './board'
 import { isSolved } from './checks'
 import { updateCandidates } from './candidates'
 import nakedSingle from './strategies/nakedSingle'
@@ -8,6 +8,7 @@ import hiddenSet from './strategies/hiddenSet'
 import { solvesSame } from './steps'
 import pointingSets from './strategies/pointingSets'
 import boxLineReduction from './strategies/boxLineReduction'
+import xWing from './strategies/xWing'
 
 const ALL_STRATEGIES = [
   nakedSingle,
@@ -20,6 +21,7 @@ const ALL_STRATEGIES = [
   hiddenSet(4),
   pointingSets,
   boxLineReduction,
+  xWing,
 ]
 
 const toCoords = (index) => {
@@ -42,13 +44,6 @@ const addCoords = (step) => {
   const items = (step.items || []).map(adder)
   const eliminations = (step.eliminations || []).map(adder)
   return { ...step, items, eliminations }
-}
-
-const setValueToBoard = (board, realIndex, value) => {
-  board.data =
-    board.data.substring(0, realIndex) +
-    value +
-    board.data.substring(realIndex + 1)
 }
 
 const removeCandidate = (board, i, value) => {

@@ -1,9 +1,10 @@
 import { CHOICES, SIZE, EMPTY, replaceInData } from './board'
-import { shuffle, sample } from '../../engine/math'
+import { shuffle } from '../../engine/math'
 import { getCandidatesAt } from './candidates'
 import { isValidAt } from './checks'
 import { hasUniqueSolution } from './bruteSolve'
 import board from './board'
+import solve from './solve'
 
 const randomRow = () => shuffle(CHOICES).join('')
 
@@ -51,9 +52,47 @@ const generateUniqueBoard = () => {
   return data
 }
 
+// http://www.sudoku-help.com/SHD-Ratings.htm
+// https://www.sudokuwiki.org/Sudoku_Creation_and_Grading.pdf
+const getCost = (step) => {
+  switch (step.type) {
+    case 'nakedSingle':
+      return 1
+    case 'nakedPair':
+      return 2
+    case 'nakedTriple':
+      return 3
+    case 'nakedQuad':
+      return 4
+    case 'hiddenSingle':
+      return 2
+    case 'hiddenPair':
+      return 2
+    case 'hiddenTriple':
+      return 3
+    case 'hiddenQuad':
+      return 4
+    case 'pointingPair':
+      return 2
+    case 'pointingTriple':
+      return 2
+    case 'boxLineReduction':
+      return 3
+    case 'xWing':
+      return 8
+    default:
+      return 1
+  }
+}
+
 const emptyRegex = /\./g
 const calculateDifficulty = (data) => {
-  return (data.match(emptyRegex) || []).length
+  //return (data.match(emptyRegex) || []).length
+  const { steps } = solve(board(data))
+  //console.log(steps)
+  const sum = steps.reduce((acc, current) => acc + getCost(current), 0)
+  //console.log('difficulty', steps.length, sum)
+  return sum
 }
 
 const getRemovalCandidates = (data) => {
@@ -74,7 +113,7 @@ const createSolvable = (data, desiredDifficulty) => {
   for (let c = 0; c < candidates.length; ++c) {
     const [i, _] = candidates[c]
     const newData = replaceInData(data, i, EMPTY)
-    if (hasUniqueSolution(newData, 10)) {
+    if (hasUniqueSolution(newData, 5)) {
       const nextResult = createSolvable(newData, desiredDifficulty)
       if (nextResult.finished) {
         return nextResult
@@ -88,6 +127,7 @@ const generatePuzzle = (desiredDifficulty = 20) => {
   const data = generateUniqueBoard()
   const b = board(data)
   const puzzle = createSolvable(data, desiredDifficulty)
+
   return {
     board: b,
     playerBoard: board(puzzle.data),

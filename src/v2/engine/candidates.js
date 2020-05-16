@@ -25,6 +25,21 @@ const getCandidatesAt = (data, i) => {
   return candidates
 }
 
+const getNumberOfOccurrences = (candidates) => {
+  const ret = {}
+  candidates.forEach((candArr, i) => {
+    if (candArr) {
+      candArr.forEach((cand) => {
+        if (!ret[cand]) {
+          ret[cand] = { value: cand, at: [] }
+        }
+        ret[cand].at.push(i)
+      })
+    }
+  })
+  return ret
+}
+
 const getUniqueCandidates = (candidates) =>
   R.uniq(
     candidates
@@ -55,4 +70,9 @@ const updateCandidates = (board, initial = false) => {
   }
 }
 
-export { getCandidatesAt, updateCandidates, getUniqueCandidates }
+export {
+  getCandidatesAt,
+  updateCandidates,
+  getUniqueCandidates,
+  getNumberOfOccurrences,
+}

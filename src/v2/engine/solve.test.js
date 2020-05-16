@@ -148,16 +148,6 @@ describe('solve', () => {
     expect(elimination(matches, 'A9', [4, 7, 8, 9])).toEqual(true)
   })
 
-  // TODO check later, needs x-wing
-  xit('solves hidden quads', () => {
-    const data = testcases.TEST_HIDDEN_QUADS
-    const { steps } = solve(board(data))
-    print(steps)
-    const matches = steps.filter(typeIs('hiddenQuad'))
-    expect(elimination(matches, 'G7', 6)).toEqual(true)
-    expect(elimination(matches, 'H7', 6)).toEqual(true)
-  })
-
   it('solves naked triples', () => {
     const data = testcases.TEST_NAKED_TRIPLES
     const { steps } = solve(board(data))
@@ -229,6 +219,19 @@ describe('solve', () => {
     expect(elimination(matches, 'B9', 4)).toEqual(true)
     expect(elimination(matches, 'C7', 4)).toEqual(true)
     expect(elimination(matches, 'C9', 4)).toEqual(true)
+  })
+
+  it('solves x-wing', () => {
+    const data = testcases.TEST_X_WING
+    const { steps } = solve(board(data))
+    //print(steps)
+    const matches = steps.filter(typeIs('xWing'))
+    expect(elimination(matches, 'A4', 7)).toEqual(true)
+    expect(elimination(matches, 'E4', 7)).toEqual(true)
+    expect(elimination(matches, 'H4', 7)).toEqual(true)
+    expect(elimination(matches, 'I4', 7)).toEqual(true)
+    expect(elimination(matches, 'H8', 7)).toEqual(true)
+    expect(elimination(matches, 'I8', 7)).toEqual(true)
   })
 })
 

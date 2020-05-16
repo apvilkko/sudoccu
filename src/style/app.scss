@@ -166,6 +166,10 @@ button {
   background: $highlight-bg;
 }
 
+.highlight-error {
+  border: 2px solid red;
+}
+
 .pencil {
   opacity: 0.5;
 }

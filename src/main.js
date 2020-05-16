@@ -1,9 +1,9 @@
-import App from "./App.svelte";
-import "./style/theme/light.scss";
-import "./style/theme/dark.scss";
+import App from './App.svelte'
+import './style/theme/light.scss'
+import './style/theme/dark.scss'
 
 const app = new App({
-  target: document.body
-});
+  target: document.body,
+})
 
-export default app;
+export default app
