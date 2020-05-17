@@ -21,6 +21,7 @@
   import { isSolved as isCellSolved } from './board/actions/cell'
   import formatSteps from './formatSteps'
   import { generatePuzzle } from './v2/engine/generate'
+  import runTestcase from './v2/engine/profiling'
 
   let store, board, state
   let loading = false
@@ -139,6 +140,10 @@
     theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length]
   }
 
+  const runProfile = () => {
+    runTestcase()
+  }
+
   const HANDLED_KEYS = [
     'ArrowUp',
     'ArrowDown',
@@ -211,6 +216,7 @@
       </div>
       <div>
         <div class="controls">
+          <button on:click={runProfile}>Profile</button>
           <button on:click={generate} disabled={loading}>Generate</button>
           <button on:click={applyNextStep} disabled={loading}>
             Apply next step

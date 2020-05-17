@@ -45,8 +45,26 @@ describe('isValidNonet', () => {
 })
 
 describe('generatePuzzle', () => {
-  const puzzle = generatePuzzle(10)
-  expect(isSolved(puzzle.board)).toEqual(true)
-  expect(isSolved(puzzle.playerBoard)).toEqual(false)
-  expect(puzzle.difficulty >= 10).toEqual(true)
+  it('works, easy', () => {
+    const puzzle = generatePuzzle(10)
+    expect(isSolved(puzzle.board)).toEqual(true)
+    expect(isSolved(puzzle.playerBoard)).toEqual(false)
+    expect(puzzle.difficulty >= 10).toEqual(true)
+  })
+
+  it('works, medium', () => {
+    const puzzle = generatePuzzle(50)
+    expect(isSolved(puzzle.board)).toEqual(true)
+    expect(isSolved(puzzle.playerBoard)).toEqual(false)
+    expect(puzzle.difficulty >= 50).toEqual(true)
+  })
+
+  it('works, hard', () => {
+    const startTime = new Date().getTime()
+    const puzzle = generatePuzzle(95)
+    expect(isSolved(puzzle.board)).toEqual(true)
+    expect(isSolved(puzzle.playerBoard)).toEqual(false)
+    expect(puzzle.difficulty >= 95).toEqual(true)
+    console.log('generatePuzzle took ', new Date().getTime() - startTime, 'ms')
+  })
 })

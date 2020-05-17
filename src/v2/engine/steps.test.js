@@ -3,6 +3,7 @@ import { solvesSame } from './steps'
 describe('solvesSame', () => {
   it('works, single', () => {
     const step1 = {
+      type: '',
       tuple: [1],
       items: [{ coords: [0, 2] }],
     }

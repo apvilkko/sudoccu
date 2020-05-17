@@ -5,7 +5,7 @@ import nakedSingle from './strategies/nakedSingle'
 import hiddenSingle from './strategies/hiddenSingle'
 import nakedSet from './strategies/nakedSet'
 import hiddenSet from './strategies/hiddenSet'
-import { solvesSame } from './steps'
+import { solvesSame, getEliminationFingerprint } from './steps'
 import pointingSets from './strategies/pointingSets'
 import boxLineReduction from './strategies/boxLineReduction'
 import xWing from './strategies/xWing'
@@ -78,24 +78,15 @@ const applySteps = (board, steps) => {
 }
 
 const removeDuplicateSteps = (steps) => {
-  const toRemove = []
-  const duplicates = {}
-  for (let s = 0; s < steps.length; ++s) {
-    const step = steps[s]
-    for (let t = 0; t < steps.length; ++t) {
-      const ref = steps[t]
-      if (!duplicates[s] && s !== t && solvesSame(step, ref)) {
-        toRemove.push(t)
-        duplicates[s] = true
-        duplicates[t] = true
-      }
-    }
-  }
+  const seen = {}
   const out = []
   for (let s = 0; s < steps.length; ++s) {
-    if (!toRemove.includes(s)) {
-      out.push(steps[s])
+    const step = steps[s]
+    const fingerprint = getEliminationFingerprint(steps[s])
+    if (!seen[fingerprint]) {
+      out.push(step)
     }
+    seen[fingerprint] = true
   }
   return out
 }
@@ -109,12 +100,13 @@ const finalize = (status, steps) => {
   }
 }
 
-const solve = (board) => {
+const solve = (board, config) => {
+  const usedStrategies = (config ? config.strategies : null) || ALL_STRATEGIES
   let steps = []
   let status = null
   if (isSolved(board)) {
-    status = 'Already solved!'
-    console.log(status)
+    //status = 'Already solved!'
+    //console.log(status)
     return finalize(status, steps)
   }
 
@@ -124,13 +116,13 @@ const solve = (board) => {
 
   updateCandidates(board, true)
 
-  while (i < ALL_STRATEGIES.length && iterations < MAX_ITERATIONS) {
+  while (i < usedStrategies.length && iterations < MAX_ITERATIONS) {
     if (isSolved(board)) {
-      console.log('Solved!')
+      //console.log('Solved!')
       return finalize(status, steps)
     }
 
-    const strategy = ALL_STRATEGIES[i]
+    const strategy = usedStrategies[i]
     stratSteps = strategy(board)
     if (stratSteps.length) {
       //console.log(stratSteps)
@@ -138,6 +130,10 @@ const solve = (board) => {
       applySteps(board, stratSteps)
       //console.log('after apply', board.data, board.candidates)
       updateCandidates(board)
+      /*addStepsRemovingDuplicates(
+        steps,
+        removeDuplicateSteps(stratSteps.map(addCoords))
+      )*/
       steps = steps.concat(stratSteps)
       if (i > 0) {
         i = 0
@@ -147,12 +143,12 @@ const solve = (board) => {
     ++iterations
   }
 
-  if (i === ALL_STRATEGIES.length || iterations === MAX_ITERATIONS) {
+  if (i === usedStrategies.length || iterations === MAX_ITERATIONS) {
     status = `Solver exhausted at iteration ${iterations}.`
-    console.log(status)
+    //console.log(status)
   }
 
   return finalize(status, steps)
 }
 
-export { solve as default, toRealIndex }
+export { solve as default, toRealIndex, ALL_STRATEGIES }
