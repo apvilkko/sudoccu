@@ -236,7 +236,7 @@ describe('solve', () => {
 })
 
 describe('getCandidatesAt', () => {
-  it('works', () => {
+  fit('works', () => {
     expect(getCandidatesAt('1234567894', 10)).toEqual([5, 6, 7, 8, 9])
   })
 })

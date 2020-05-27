@@ -24,10 +24,22 @@ describe('generate', () => {
 })
 
 describe('isValidAt', () => {
-  it('works', () => {
+  it('works, first box', () => {
     expect(isValidAt({ data: '1234567891' }, 9)).toEqual(false)
     expect(isValidAt({ data: '1234567892' }, 9)).toEqual(false)
     expect(isValidAt({ data: '1234567894' }, 9)).toEqual(true)
+  })
+
+  it('works, 4th box', () => {
+    expect(isValidAt({ data: '4352697816825714931978345628' }, 27)).toEqual(
+      true
+    )
+    expect(
+      isValidAt({ data: '4352697816825714931978345628261953472' }, 36)
+    ).toEqual(false)
+    expect(
+      isValidAt({ data: '4352697816825714931978345628261953473' }, 36)
+    ).toEqual(true)
   })
 })
 

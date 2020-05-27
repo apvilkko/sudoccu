@@ -7,9 +7,18 @@ import { isSolved } from './checks'
 //const data = testcases.TEST_NAKED_PAIRS
 //const { steps } = solve(board(data))
 
-const ITERATIONS = 10
+function median(values) {
+  values.sort((a, b) => a - b)
+
+  var half = Math.floor(values.length / 2)
+
+  if (values.length % 2) return values[half]
+  else return (values[half - 1] + values[half]) / 2.0
+}
+
+const ITERATIONS = 20
 const times = []
-const difficulty = 55
+const difficulty = 75
 
 const start = new Date().getTime()
 
@@ -30,8 +39,9 @@ for (let i = 0; i < ITERATIONS; ++i) {
 }
 
 const average = times.reduce((acc, curr) => acc + curr, 0) / times.length
+const med = median([...times])
 console.log(
-  `${ITERATIONS} runs took ${average} on average, difficulty ${difficulty}`
+  `${ITERATIONS} runs took ${average} on average, ${med} median, difficulty ${difficulty}`
 )
 console.log(times)
 console.log(new Date().getTime() - start, 'ms')

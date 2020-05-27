@@ -1,5 +1,15 @@
 import * as R from 'ramda'
-import { EMPTY, ROW, get, COL, BOX, CHOICES, realIndexTo } from './board'
+import {
+  EMPTY,
+  ROW,
+  get,
+  COL,
+  BOX,
+  CHOICES,
+  realIndexTo,
+  SIZE,
+  DIM,
+} from './board'
 
 const sees = (data, i) => {
   const rowIndex = realIndexTo(ROW, i)
@@ -13,16 +23,63 @@ const sees = (data, i) => {
   return combo
 }
 
-const getCandidatesAt = (data, i) => {
-  const value = data[i] || EMPTY
-  let candidates = null
-  if (value === EMPTY) {
-    const combo = sees(data, i)
-    candidates = CHOICES.filter((x) => combo.indexOf(x) === -1).map((x) =>
-      parseInt(x)
-    )
+/*const STARTING_CHOICES = CHOICES.reduce((acc, curr) => {
+  acc[curr] = true
+  return acc
+}, {})*/
+
+const getCandidatesAt = (data, realIndex) => {
+  const value = data[realIndex] || EMPTY
+  if (value !== EMPTY) {
+    return null
   }
-  return candidates
+
+  /*const candidates = { ...STARTING_CHOICES }
+  const col = realIndex % SIZE
+  const row = Math.floor(realIndex / SIZE)
+  const indexes = { [realIndex]: true }
+  for (let i = 0; i < SIZE; ++i) {
+    const i1 = row * SIZE + i
+    if (indexes[i1]) {
+      continue
+    }
+    indexes[i1] = true
+    const i2 = i * SIZE + col
+    if (indexes[i2]) {
+      continue
+    }
+    indexes[i2] = true
+    const val = data[i1]
+    if (val && val !== EMPTY) {
+      delete candidates[val]
+    }
+    const val2 = data[i2]
+    if (val2 && val2 !== EMPTY) {
+      delete candidates[val2]
+    }
+  }
+
+  const boxStart =
+    Math.floor(row / DIM) * (3 * SIZE) + Math.floor(col / DIM) * DIM
+
+  for (let j = 0; j < DIM; ++j) {
+    for (let i = 0; i < DIM; ++i) {
+      const i1 = boxStart + j * SIZE + i
+      if (indexes[i1]) {
+        continue
+      }
+      indexes[i1] = true
+      const val = data[i1]
+      if (val && val !== EMPTY) {
+        delete candidates[val]
+      }
+    }
+  }
+
+  return Object.keys(candidates).map((x) => parseInt(x, 10))*/
+
+  const combo = sees(data, realIndex)
+  return CHOICES.filter((x) => combo.indexOf(x) === -1).map((x) => parseInt(x))
 }
 
 const getNumberOfOccurrences = (candidates) => {
